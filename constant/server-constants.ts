@@ -1,0 +1,1 @@
+export const server_base_url = "http://localhost/textile-track-system/api/v1";
