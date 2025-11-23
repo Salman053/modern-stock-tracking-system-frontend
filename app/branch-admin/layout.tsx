@@ -4,12 +4,13 @@ import { Breadcrumb } from "@/components/shared/breadcrumb";
 import Header from "@/components/shared/header";
 import ProfessionalSidebar from "@/components/shared/professional-sidebar";
 import { adminNav } from "@/constant/admin-constants";
+import { branchAdminNav } from "@/constant/branch-admin-contants";
 import { server_base_url } from "@/constant/server-constants";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@/hooks/use-mutation";
 import { toast } from "sonner";
 
-export default function AdminLayout({
+export default function BranchAdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -26,7 +27,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen overflow-hidden max-h-screen flex max-w-[100vw] bg-gray-50 dark:bg-gray-950">
       {/* Sidebar */}
-      <ProfessionalSidebar nav={adminNav} />
+      <ProfessionalSidebar nav={branchAdminNav} />
 
       {/* Main Content Area */}
       <div className="flex-1  overflow-hidden flex flex-col min-w-0 ">

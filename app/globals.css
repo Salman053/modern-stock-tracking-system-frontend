@@ -2,10 +2,12 @@
 @import "tw-animate-css";
 
 
-html{
+html {
   overflow: hidden;
 }
+
 @custom-variant dark (&:is(.dark *));
+
 :root {
   --background: oklch(0.9940 0 0);
   --foreground: oklch(0 0 0);
@@ -175,13 +177,23 @@ html{
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
 
+.page-heading {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.page-description {
+  @apply text-muted-foreground mt-2;
+}
+
 body {
   letter-spacing: var(--tracking-normal);
 }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

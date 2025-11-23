@@ -1,12 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Menu, X, ChevronDown, ChevronRight, LogOut, Settings } from "lucide-react";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Menu,
+  X,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Settings,
+  ChevronLeft,
+  ChevronRight as ExpandIcon,
+} from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -44,13 +49,13 @@ export default function ProfessionalSidebar({
 }: ProfessionalSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false); // NEW: collapsed state
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
 
-  // Auto-expand parent menu items when child is active
   React.useEffect(() => {
     nav.forEach((item) => {
-      if (item.submenu?.some(sub => pathname.startsWith(sub.href))) {
-        setExpandedItems(prev => 
+      if (item.submenu?.some((sub) => pathname.startsWith(sub.href))) {
+        setExpandedItems((prev) =>
           prev.includes(item.title) ? prev : [...prev, item.title]
         );
       }
@@ -64,36 +69,58 @@ export default function ProfessionalSidebar({
   };
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-gradient-to-b min-h-screen max-h-screen overflow-y-auto from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950 border-r border-gray-200/60 dark:border-gray-800/60">
+    <div className="flex h-full flex-col bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950 border-r border-gray-200/60 dark:border-gray-800/60">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+      <div
+        className={cn(
+          "flex items-center justify-between p-4 border-b border-gray-200/60 dark:border-gray-800/60 transition-all duration-300"
+        )}
+      >
         <div className="flex items-center gap-3">
           {logo || (
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/25">
+            <div className={` ${collapsed && "hidden"} w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/25`}>
               {title.charAt(0)}
             </div>
           )}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
-                {subtitle}
-              </p>
-            )}
-          </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+                {title}
+              </h1>
+              {subtitle && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Collapse/Expand button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? (
+            <ExpandIcon className="w-4 h-4 rotate-180" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </Button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto p-2 space-y-1.5">
         {nav.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           const hasSubmenu = item.submenu && item.submenu.length > 0;
           const isExpanded = expandedItems.includes(item.title);
-          const hasActiveChild = item.submenu?.some(sub => 
-            pathname === sub.href || pathname.startsWith(sub.href + "/")
+          const hasActiveChild = item.submenu?.some(
+            (sub) =>
+              pathname === sub.href || pathname.startsWith(sub.href + "/")
           );
 
           return (
@@ -114,14 +141,13 @@ export default function ProfessionalSidebar({
                   }
                 }}
               >
-                <Link 
-                  href={item.href} 
-                  className="flex items-center gap-3 flex-1"
-                  onClick={(e) => {
-                    if (hasSubmenu) {
-                      e.preventDefault();
-                    }
-                  }}
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 flex-1",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={(e) => hasSubmenu && e.preventDefault()}
                 >
                   <span
                     className={cn(
@@ -133,11 +159,13 @@ export default function ProfessionalSidebar({
                   >
                     {item.icon}
                   </span>
-                  <span className="font-medium text-sm">{item.title}</span>
+                  {!collapsed && (
+                    <span className="font-medium text-sm">{item.title}</span>
+                  )}
                 </Link>
 
-                {hasSubmenu && (
-                  <button 
+                {hasSubmenu && !collapsed && (
+                  <button
                     className="ml-2 p-1 rounded-md hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -153,17 +181,17 @@ export default function ProfessionalSidebar({
                 )}
               </div>
 
-              {/* Submenu */}
-              {hasSubmenu && isExpanded && (
+              {hasSubmenu && isExpanded && !collapsed && (
                 <div className="ml-8 mt-1.5 space-y-1 border-l-2 border-gray-100 dark:border-gray-800 pl-4">
                   {item.submenu!.map((sub) => {
-                    const isSubActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
+                    const isSubActive =
+                      pathname === sub.href ||
+                      pathname.startsWith(sub.href + "/");
                     return (
                       <Link
                         key={sub.href}
                         href={sub.href}
                         onClick={() => setOpen(false)}
-                        className="block"
                       >
                         <div
                           className={cn(
@@ -175,7 +203,7 @@ export default function ProfessionalSidebar({
                         >
                           <div className="font-medium">{sub.title}</div>
                           {sub.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-relaxed">
+                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
                               {sub.description}
                             </p>
                           )}
@@ -189,16 +217,18 @@ export default function ProfessionalSidebar({
           );
         })}
       </nav>
-
-     
-   
     </div>
   );
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden max-h-screen overflow-y-auto lg:flex lg:w-60 lg:flex-col lg:inset-y-0 z-40">
+      <aside
+        className={cn(
+          "hidden lg:flex lg:flex-col max-h-screen overflow-y-auto transition-all duration-300 z-40",
+          collapsed ? "w-20" : "w-60"
+        )}
+      >
         <SidebarContent />
       </aside>
 
@@ -217,8 +247,8 @@ export default function ProfessionalSidebar({
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent 
-          side="left" 
+        <SheetContent
+          side="left"
           className="p-0 w-80 max-w-[85vw] bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-800/50"
         >
           <SidebarContent />

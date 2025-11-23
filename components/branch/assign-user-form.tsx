@@ -52,6 +52,7 @@ import { useFetch } from "@/hooks/use-fetch";
 import { IBranch, IUser } from "@/types";
 import { useMutation } from "@/hooks/use-mutation";
 import { z } from "zod";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AssignUserFormProps {
   mode?: "create" | "edit";
@@ -60,11 +61,14 @@ interface AssignUserFormProps {
 }
 
 const ROLE_CONFIG = {
-  "branch-admin": {
-    label: "Branch Administrator",
-    description: "Manage users and operations within assigned branch",
+
+  "sales-manager": {
+    label: "Sales Administrator",
+    description: "Manage sales and operations within assigned branch",
     color: "bg-blue-100 text-blue-800",
-  },
+  }
+   
+
   // Add other roles as needed
 };
 
@@ -102,7 +106,7 @@ export function AssignUserForm({
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [showConfirmation, setShowConfirmation] = React.useState(false);
   const [formData, setFormData] = React.useState<UserRegistrationFormData | null>(null);
-
+  const {user} = useAuth()
   const isEdit = mode === "edit";
 
   const { loading, mutate } = useMutation(
@@ -134,14 +138,7 @@ export function AssignUserForm({
     }
   );
 
-  const { data: activeBranches, loading: branchesLoading } = useFetch(
-    `${server_base_url}/branches`,
-    {
-      auto: true,
-      method: "GET",
-      credentials: "include",
-    }
-  );
+  
 
   // Use appropriate schema based on mode
   const formSchema = isEdit ? editUserSchema : createUserSchema;
@@ -218,9 +215,6 @@ export function AssignUserForm({
   const toggleConfirmPasswordVisibility = () =>
     setShowConfirmPassword(!showConfirmPassword);
 
-  const getRoleDescription = (role: string) => {
-    return ROLE_CONFIG[role as keyof typeof ROLE_CONFIG]?.description || "";
-  };
 
   const getStatusDescription = (status: keyof typeof STATUS_CONFIG) => {
     return STATUS_CONFIG[status]?.description || "";
@@ -425,33 +419,11 @@ export function AssignUserForm({
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="text-left">
-                              <SelectValue placeholder="Select branch location" />
+                            <SelectTrigger disabled className="text-left">
+                              <SelectValue defaultValue={user?.branch_id}  placeholder={user?.branch_name} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            {branchesLoading ? (
-                              <SelectItem value="loading" disabled>
-                                Loading branches...
-                              </SelectItem>
-                            ) : (
-                              activeBranches?.data?.map((branch: IBranch) => (
-                                <SelectItem
-                                  key={branch.id}
-                                  value={branch.id.toString()}
-                                >
-                                  <div className="flex flex-col">
-                                    <span>{branch.name}</span>
-                                    {branch.address && (
-                                      <span className="text-xs text-muted-foreground">
-                                        {branch.address}
-                                      </span>
-                                    )}
-                                  </div>
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
+                       
                         </Select>
                         <FormMessage />
                       </FormItem>
