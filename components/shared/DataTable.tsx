@@ -48,7 +48,7 @@ const renderStatus = (status: string) => {
 
 // Updated TableHeader and TableRow with professional styling
 const TableHeader = memo(({ columns, selectable, actions, selectedRows, paginatedRows, toggleSelectAll, sortConfig, handleSort }: any) => (
-  <thead className="dark:bg-slate-800  rounded-3xl sticky top-0 z-10 text-foreground uppercase text-xs tracking-wider">
+  <thead className="dark:bg-slate-800 bg-primary text-white rounded-full   rounded-3xl sticky top-0 z-10 dark:text-foreground uppercase text-xs tracking-wider">
     <tr>
       {selectable && (
         <th className="px-4 py-3  rounded-3xl ">

@@ -48,6 +48,8 @@ import { useMutation } from "@/hooks/use-mutation";
 import { useFetch } from "@/hooks/use-fetch";
 import { IBranch } from "@/types";
 import { productSchema, ProductSchemaType } from "@/schema/product-schema";
+import { Option, SmartSelect } from "../shared/smart-select";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProductFormProps {
   mode?: "create" | "edit";
@@ -62,23 +64,33 @@ const STATUS_CONFIG = {
     color: "bg-green-100 text-green-800 border-green-200",
   },
   inactive: {
-    label: "Inactive",
+    label: "In-active",
     description: "Product is temporarily unavailable",
     color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  },
+  archived: {
+    label: "Archived",
+    description: "Product is currently archived",
+    color: "bg-red-200 text-red-800 border-red-200",
   },
   out_of_stock: {
     label: "Out of Stock",
     description: "Product is currently out of stock",
-    color: "bg-red-100 text-red-800 border-red-200",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
   },
 };
 
-const PRODUCT_TYPES = [
-  { value: "fabric", label: "Fabric", description: "Textile and cloth materials" },
-  { value: "yarn", label: "Yarn", description: "Spun thread for weaving or knitting" },
-  { value: "thread", label: "Thread", description: "Sewing and embroidery thread" },
-  { value: "accessory", label: "Accessory", description: "Sewing accessories and tools" },
-  { value: "raw_material", label: "Raw Material", description: "Raw textile materials" },
+export const FABRIC_MATERIAL_TYPES: Option[] = [
+  // Natural Fibers
+  { label: "Cotton", value: "cotton" },
+  { value: "lawn", label: "Lawn" },
+  { value: "loone", label: "Loone" },
+  { value: "linen", label: "Linen" },
+  { value: "silk", label: "Silk" },
+  { value: "wool", label: "Wool" },
+  { value: "khaddar", label: "Khaddar" },
+  { value: "cambric", label: "Cambric" },
+  { value: "viscose", label: "Viscose" },
 ];
 
 export function ProductForm({
@@ -87,8 +99,11 @@ export function ProductForm({
   onSuccess,
 }: ProductFormProps) {
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [formData, setFormData] = React.useState<ProductSchemaType | null>(null);
+  const [formData, setFormData] = React.useState<ProductSchemaType | null>(
+    null
+  );
 
+  const {user} = useAuth()
   const isEdit = mode === "edit";
 
   const { loading, mutate } = useMutation(
@@ -99,22 +114,27 @@ export function ProductForm({
       credentials: "include",
       method: isEdit ? "PATCH" : "POST",
       onError: (error) => {
-        console.log(error)
+        console.log(error);
         toast.error(isEdit ? "Update Failed" : "Creation Failed", {
           description:
             error?.message ||
-            `Failed to ${isEdit ? "update" : "create"} product. Please try again.`,
+            `Failed to ${
+              isEdit ? "update" : "create"
+            } product. Please try again.`,
         });
       },
       onSuccess: (data) => {
         toast.success(
-          isEdit ? "Product Updated Successfully" : "Product Created Successfully",
+          isEdit
+            ? "Product Updated Successfully"
+            : "Product Created Successfully",
           {
             description: `${formData?.name} has been ${
               isEdit ? "updated" : "created"
             } successfully.`,
           }
         );
+        
         form.reset();
         onSuccess?.();
       },
@@ -137,9 +157,9 @@ export function ProductForm({
       type: "",
       description: "",
       company: "",
-      quantity: 0,
-      purchase_price_per_meter: 0,
-      sales_price_per_meter: 0,
+      quantity: "" as any,
+      purchase_price_per_meter: "" as any,
+      sales_price_per_meter: "" as any,
       status: "active",
     },
   });
@@ -155,16 +175,20 @@ export function ProductForm({
     try {
       await mutate({
         ...formData,
-        password: password,
+        user_id:user?.id,
+        branch_id:user?.branch_id,
+        admin_password: password,
       });
     } catch (error: any) {
       toast.error(isEdit ? "Update Failed" : "Creation Failed", {
         description:
           error?.message ||
-          `Failed to ${isEdit ? "update" : "create"} product. Please try again.`,
+          `Failed to ${
+            isEdit ? "update" : "create"
+          } product. Please try again.`,
       });
     } finally {
-      setShowConfirmation(false);
+      // setShowConfirmation(false);
     }
   };
 
@@ -175,11 +199,14 @@ export function ProductForm({
   // Calculate profit margin
   const purchasePrice = form.watch("purchase_price_per_meter");
   const salesPrice = form.watch("sales_price_per_meter");
-  const profitMargin = purchasePrice > 0 ? ((salesPrice - purchasePrice) / purchasePrice) * 100 : 0;
+  const profitMargin =
+    purchasePrice > 0
+      ? ((salesPrice - purchasePrice) / purchasePrice) * 100
+      : 0;
 
   return (
     <>
-      <Card className="w-full 2xl:max-w-4xl mx-auto">
+      <Card className="w-full gap-0 2xl:max-w-4xl mx-auto">
         <CardHeader className="">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -241,28 +268,16 @@ export function ProductForm({
                           <Package className="h-4 w-4" />
                           Product Type
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select product type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {PRODUCT_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                <div className="flex flex-col">
-                                  <span>{type.label}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {type.description}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <SmartSelect
+                          options={FABRIC_MATERIAL_TYPES}
+                          selected={
+                            form.watch("type") ? [form.watch("type")] : []
+                          }
+                          onChange={(value) => form.setValue("type", value[0])}
+                          placeholder="Select fabric type"
+                          isMulti={false}
+                        />
+
                         <FormDescription>
                           Choose the appropriate product category
                         </FormDescription>
@@ -335,11 +350,13 @@ export function ProductForm({
                           Quantity
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="0" 
+                          <Input
+                            type="number"
+                            placeholder="0"
                             {...field}
-                            onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 0)
+                            }
                           />
                         </FormControl>
                         <FormDescription>
@@ -360,17 +377,17 @@ export function ProductForm({
                           Purchase Price/Meter
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             step="0.01"
-                            placeholder="0.00" 
+                            placeholder="0.00"
                             {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 0)
+                            }
                           />
                         </FormControl>
-                        <FormDescription>
-                          Cost price per meter
-                        </FormDescription>
+                        <FormDescription>Cost price per meter</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -386,12 +403,14 @@ export function ProductForm({
                           Sales Price/Meter
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             step="0.01"
-                            placeholder="0.00" 
+                            placeholder="0.00"
                             {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              field.onChange(parseFloat(e.target.value) || 0)
+                            }
                           />
                         </FormControl>
                         <FormDescription>
@@ -407,23 +426,30 @@ export function ProductForm({
                 {purchasePrice > 0 && salesPrice > 0 && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-blue-800">Profit Margin:</span>
-                      <Badge 
+                      <span className="text-sm font-medium text-blue-800">
+                        Profit Margin:
+                      </span>
+                      <Badge
                         variant={profitMargin >= 0 ? "default" : "destructive"}
                         className={
-                          profitMargin >= 30 ? "bg-green-100 text-green-800" :
-                          profitMargin >= 15 ? "bg-yellow-100 text-yellow-800" :
-                          "bg-blue-100 text-blue-800"
+                          profitMargin >= 30
+                            ? "bg-green-100 text-green-800"
+                            : profitMargin >= 15
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-blue-100 text-blue-800"
                         }
                       >
-                        {profitMargin >= 0 ? `${profitMargin.toFixed(1)}%` : "Loss"}
+                        {profitMargin >= 0
+                          ? `${profitMargin.toFixed(1)}%`
+                          : "Loss"}
                       </Badge>
                     </div>
                     <p className="text-xs text-blue-700 mt-1">
-                      {profitMargin >= 0 
-                        ? `Profit per meter: $${(salesPrice - purchasePrice).toFixed(2)}`
-                        : "Sales price is below purchase price"
-                      }
+                      {profitMargin >= 0
+                        ? `Profit per meter: Rs. ${(
+                            salesPrice - purchasePrice
+                          ).toFixed(2)}`
+                        : "Sales price is below purchase price"}
                     </p>
                   </div>
                 )}
@@ -472,7 +498,9 @@ export function ProductForm({
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {getStatusDescription(field.value as keyof typeof STATUS_CONFIG)}
+                      {getStatusDescription(
+                        field.value as keyof typeof STATUS_CONFIG
+                      )}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -537,7 +565,9 @@ export function ProductForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type:</span>
-                  <span className="font-medium capitalize">{formData.type}</span>
+                  <span className="font-medium capitalize">
+                    {formData.type}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Company:</span>
@@ -549,11 +579,15 @@ export function ProductForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Purchase Price:</span>
-                  <span className="font-medium">${formData.purchase_price_per_meter}/m</span>
+                  <span className="font-medium">
+                    ${formData.purchase_price_per_meter}/m
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Sales Price:</span>
-                  <span className="font-medium">${formData.sales_price_per_meter}/m</span>
+                  <span className="font-medium">
+                    ${formData.sales_price_per_meter}/m
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status:</span>

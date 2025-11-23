@@ -68,6 +68,7 @@ export function useMutation<TData = any, TVariables = any>(
         });
 
         let responseData;
+        console.log(responseData)
         try {
           responseData = await res.json();
         } catch (parseError) {

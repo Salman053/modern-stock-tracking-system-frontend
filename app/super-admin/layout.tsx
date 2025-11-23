@@ -7,6 +7,7 @@ import { adminNav } from "@/constant/admin-constants";
 import { server_base_url } from "@/constant/server-constants";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@/hooks/use-mutation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function AdminLayout({
@@ -15,6 +16,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
+  const router = useRouter()
   const {
     mutate,
     loading: logoutLoading,
@@ -32,6 +34,7 @@ export default function AdminLayout({
       <div className="flex-1  overflow-hidden flex flex-col min-w-0 ">
         {/* Header - Fixed at top */}
         <Header
+        onProfile={()=>router.push("/super-admin/profile")}
           onLogout={() => {
             mutate({ action: "logout" })
               .then(() => {

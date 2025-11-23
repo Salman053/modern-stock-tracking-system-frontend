@@ -82,3 +82,4 @@ export const manage_branches_table_columns: TableColumn[] = [
   //   sortable: true,
   // },
 ];
+// constant/admin-constants.ts

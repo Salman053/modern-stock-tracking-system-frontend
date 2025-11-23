@@ -29,7 +29,7 @@ export const productSchema = z.object({
     .min(0, "Sales price cannot be negative")
     .refine(val => val === 0 || val >= 0.01, "Sales price must be at least 0.01"),
   
-  status: z.enum(["active", "inactive", "out_of_stock"]),
+  status: z.enum(["active", "in-active", "out_of_stock","archived"]),
 }).refine((data) => data.sales_price_per_meter >= data.purchase_price_per_meter, {
   message: "Sales price should be greater than or equal to purchase price",
   path: ["sales_price_per_meter"],

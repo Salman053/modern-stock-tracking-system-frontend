@@ -32,3 +32,20 @@ export type NavItem = {
   icon?: React.ReactNode;
   submenu?: { title: string; href: string; description?: string }[];
 };
+
+export interface IProduct {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  company: string;
+  quantity: number;
+  user_id: string;
+  branch_id: string;
+  purchase_price_per_meter: number;
+  sales_price_per_meter: number;
+  status: 'active' | 'inactive' | 'out_of_stock'|'archived';
+  created_at: string;
+  updated_at: string;
+  profit_margin?: number;
+}

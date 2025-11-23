@@ -89,7 +89,7 @@ function AllSystemUsers() {
     },
   ];
   const users: IUser[] =
-    data?.data && Array.isArray(data.data) ? data.data : [];
+    data?.data && Array.isArray(data.data) ? data.data.filter((i) => i.id != user?.id) : [];
 
   if (error) {
     return (
@@ -123,27 +123,21 @@ function AllSystemUsers() {
         <Button onClick={()=>router.push("/branch-admin/assign-user")}>Assign User</Button>
       </div>
 
-      {users.length === 0 && !loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            No users found for this branch
-          </p>
-        </div>
-      ) : (
+      
         <DataTable
           selectable={false}
           defaultItemsPerPage={10}
           pagination
           loading={loading}
           columns={manage_branches_table_columns}
-          rows={users.filter((i) => i.id != user?.id)}
+          rows={users}
           actions={(row: any) => (
             <div className="flex gap-2 justify-center">
               <ReusablePopover actions={options as any} rowData={row} />
             </div>
           )}
         />
-      )}
+    
 
       <ConfirmationDialog
         requiresPassword
