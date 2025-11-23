@@ -1,5 +1,5 @@
 import { NavItem } from "@/types";
-import { Box, Building, Folders, LayoutDashboard } from "lucide-react";
+import { Box, Folders, LayoutDashboard, Truck } from "lucide-react";
 
 export const branchAdminNav: NavItem[] = [
   {
@@ -14,17 +14,50 @@ export const branchAdminNav: NavItem[] = [
   },
   {
     title: "System Users",
-    href: "/branch-admin/system-users",
+    href: "/branch-admin/manage-users",
     icon: <Folders className="h-5 w-5" />,
     submenu: [
       { title: "Manage Users", href: "/branch-admin/manage-users" },
       { title: "Assign User", href: "/branch-admin/assign-user" },
-     
     ],
-  }]
+  },
+  {
+    title: "Stock Operations",
+    href: "/branch-admin/stock-operations",
+    icon: <Truck className="h-5 w-5" />,
+  },
+];
 
-
-  
+export const stock_movements_columns = [
+  {
+    label: "Product",
+    key: "product_name",
+    sortable: true,
+  },
+  {
+    label: "Quantity",
+    key: "quantity",
+    sortable: true,
+    render: (value: number) => value?.toLocaleString(),
+  },
+  {
+    label: "Unit Price",
+    key: "unit_price_per_meter",
+    sortable: true,
+    render: (value: number) => `Rs. ${value?.toLocaleString()}`,
+  },
+  {
+    label: "Date",
+    key: "date",
+    sortable: true,
+    render: (value: string) => new Date(value).toLocaleDateString(),
+  },
+  {
+    label: "Created By",
+    key: "created_by",
+    sortable: true,
+  },
+];
 export const products_table_column_branch_admin = [
   {
     label: "Name",
@@ -36,8 +69,8 @@ export const products_table_column_branch_admin = [
     key: "type",
     sortable: true,
     render: (value: string) => (
-      <span className="capitalize">{value.replace('_', ' ')}</span>
-    )
+      <span className="capitalize">{value.replace("_", " ")}</span>
+    ),
   },
   {
     label: "Company",
@@ -49,26 +82,30 @@ export const products_table_column_branch_admin = [
     key: "quantity",
     sortable: true,
     render: (value: number) => (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-        value > 50 ? 'bg-green-100 text-green-800' :
-        value > 10 ? 'bg-yellow-100 text-yellow-800' :
-        'bg-red-100 text-red-800'
-      }`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          value > 50
+            ? "bg-green-100 text-green-800"
+            : value > 10
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-red-100 text-red-800"
+        }`}
+      >
         {value} units
       </span>
-    )
+    ),
   },
   {
     label: "Purchase Price",
     key: "purchase_price_per_meter",
     sortable: true,
-    render: (value: number) => `Rs.${value.toFixed(2)}/m`
+    render: (value: number) => `Rs.${value.toFixed(2)}/m`,
   },
   {
     label: "Sales Price",
     key: "sales_price_per_meter",
     sortable: true,
-    render: (value: number) => `Rs.${value.toFixed(2)}/m`
+    render: (value: number) => `Rs.${value.toFixed(2)}/m`,
   },
   {
     label: "Status",
@@ -79,21 +116,28 @@ export const products_table_column_branch_admin = [
         active: { color: "bg-green-100 text-green-800", label: "Active" },
         inactive: { color: "bg-yellow-100 text-yellow-800", label: "Inactive" },
         archived: { color: "bg-red-100 text-red-800", label: "Archived" },
-        out_of_stock: { color: "bg-red-100 text-red-800", label: "Out of Stock" }
+        out_of_stock: {
+          color: "bg-red-100 text-red-800",
+          label: "Out of Stock",
+        },
       };
-      const config = statusConfig[value as keyof typeof statusConfig] || statusConfig.inactive;
-      
+      const config =
+        statusConfig[value as keyof typeof statusConfig] ||
+        statusConfig.inactive;
+
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${config.color}`}>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${config.color}`}
+        >
           {config.label}
         </span>
       );
-    }
+    },
   },
   {
     label: "Last Updated",
     key: "updated_at",
     sortable: true,
-    render: (value: string) => new Date(value).toLocaleDateString()
-  }
+    render: (value: string) => new Date(value).toLocaleDateString(),
+  },
 ];

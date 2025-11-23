@@ -13,12 +13,12 @@ import { useModalState } from "@/hooks/use-modal-state";
 import { useMutation } from "@/hooks/use-mutation";
 import { IUser } from "@/types";
 import { FilePenLine, Shield, Trash2 } from "lucide-react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useMemo, useCallback, Suspense } from "react";
 import { toast } from "sonner";
 
 function AllSystemUsers() {
-  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  const [selectedUser, setSelectedUser] = React.useState<IUser | null>(null);
   const router = useRouter();
   const { modalState, toggleModal } = useModalState({
     isDeleteModalOpen: false,
@@ -26,123 +26,177 @@ function AllSystemUsers() {
   });
   const { user } = useAuth();
 
-  const { data, refetch, error, loading } = useFetch(
-    `${server_base_url}/users/branch-users/?branch_id=${user?.branch_id}&&include_archived=true`,
+  // Optimized fetch with conditional URL
+  const apiUrl = useMemo(
+    () =>
+      user?.branch_id
+        ? `${server_base_url}/users/branch-users/?branch_id=${user.branch_id}&include_archived=true`
+        : null,
+    [user?.branch_id]
+  );
+
+  const { data, refetch, error, loading } = useFetch(apiUrl, {
+    auto: true,
+    method: "GET",
+    onError: (error) => {
+      console.error("Error fetching branch users:", error);
+    },
+  });
+
+  // Optimized mutation
+  const { mutate: deactivateUser } = useMutation(
+    `${server_base_url}/users/deactivate`,
     {
-      auto: true,
-      method: "GET",
-      onError: (error) => {
-        console.error("Error fetching branch users:", error);
+      credentials: "include",
+      method: "POST",
+      onError: (error: any) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => {
+        toast.success("The user is deactivated successfully");
+        toggleModal("isDeleteModalOpen");
+        setSelectedUser(null);
+        refetch();
       },
     }
   );
-  const { mutate } = useMutation(`${server_base_url}/users/deactivate`, {
-    credentials: "include",
-    method: "POST",
-    onError: (error: any) => {
-      toast.error(error.message);
-    },
-    onSuccess: () => {
-      toast.success("The user is deactivated successfully");
-      toggleModal("isDeleteModalOpen");
-      setSelectedUser(null);
-      refetch();
-    },
-  });
-  const options = [
-    {
-      label: "edit",
-      icon: <FilePenLine size={16} />,
-      onClick: (item: IUser) => {
-        const params = new URLSearchParams({
-          id: String(item.id),
-          username: item.username,
-          email: item.email,
-          status: item.status,
-          role: item.role,
-          branch_id: String(item.branch_id),
-        });
-        router.push(`/super-admin/assign-user/?${params.toString()}`);
-      },
-    },
-    {
-      label: "delete",
-      onClick: (item: IUser) => {
-        toggleModal("isDeleteModalOpen");
-        setSelectedUser(item);
-        toast.warning(
-          "Please carefully read the instructions before doing action"
-        );
-      },
-      icon: <Trash2 size={16} />,
-    },
-    {
-      label: "Change Password",
-      onClick: (item: IUser) => {
-        toggleModal("isPasswordDialogOpen");
-        setSelectedUser(item);
-        toast.warning(
-          "Please carefully read the instructions before doing action"
-        );
-      },
-      icon: <Shield size={16} />,
-    },
-  ];
-  const users: IUser[] =
-    data?.data && Array.isArray(data.data) ? data.data.filter((i) => i.id != user?.id) : [];
 
+  // Memoized users data
+  const users = useMemo(() => {
+    if (!data?.data || !Array.isArray(data.data)) return [];
+    return data.data.filter((i) => i.id !== user?.id);
+  }, [data?.data, user?.id]);
+
+  // Memoized action handlers
+  const handleEdit = useCallback(
+    (item: IUser) => {
+      const params = new URLSearchParams({
+        id: String(item.id),
+        username: item.username,
+        email: item.email,
+        status: item.status,
+        role: item.role,
+        branch_id: String(item.branch_id),
+      });
+      router.push(`/super-admin/assign-user/?${params.toString()}`);
+    },
+    [router]
+  );
+
+  const handleDelete = useCallback(
+    (item: IUser) => {
+      toggleModal("isDeleteModalOpen");
+      setSelectedUser(item);
+      toast.warning(
+        "Please carefully read the instructions before doing action"
+      );
+    },
+    [toggleModal]
+  );
+
+  const handlePasswordChange = useCallback(
+    (item: IUser) => {
+      toggleModal("isPasswordDialogOpen");
+      setSelectedUser(item);
+      toast.warning(
+        "Please carefully read the instructions before doing action"
+      );
+    },
+    [toggleModal]
+  );
+
+  // Memoized options to prevent unnecessary re-renders
+  const options = useMemo(
+    () => [
+      {
+        label: "edit",
+        icon: <FilePenLine size={16} />,
+        onClick: handleEdit,
+      },
+      {
+        label: "delete",
+        onClick: handleDelete,
+        icon: <Trash2 size={16} />,
+      },
+      {
+        label: "Change Password",
+        onClick: handlePasswordChange,
+        icon: <Shield size={16} />,
+      },
+    ],
+    [handleEdit, handleDelete, handlePasswordChange]
+  );
+
+  // Memoized deactivate handler
+  const handleDeactivateUser = useCallback(
+    async (password: string) => {
+      try {
+        await deactivateUser({
+          admin_password: password,
+          user_id: selectedUser?.id,
+        });
+      } catch (err: any) {
+        toast.error(err.message);
+      }
+    },
+    [deactivateUser, selectedUser?.id]
+  );
+
+  // Memoized modal close handlers
+  const handlePasswordModalClose = useCallback(() => {
+    toggleModal("isPasswordDialogOpen");
+    setSelectedUser(null);
+  }, [toggleModal]);
+
+  const handleDeleteModalClose = useCallback(() => {
+    toggleModal("isDeleteModalOpen");
+  }, [toggleModal]);
+
+  // Memoized router navigation
+  const handleAssignUser = useCallback(() => {
+    router.push("/branch-admin/assign-user");
+  }, [router]);
+
+  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
         <div className="text-red-500 text-lg">Failed to load users</div>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
+        <Button onClick={() => refetch()} variant="default">
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
 
-  const handleDeactivateUser = async (password: string) => {
-    try {
-      await mutate({ admin_password: password, user_id: selectedUser?.id });
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
   return (
-    <div>
-      <div className="flex justify-between ">
+    <Suspense>
+      <div className="flex justify-between">
         <div className="mb-8">
-          <h2 className="page-heading">{user?.branch_name} Users </h2>
+          <h2 className="page-heading">{user?.branch_name} Users</h2>
           <h3 className="page-description">Manage users for your branch</h3>
         </div>
-        <Button onClick={()=>router.push("/branch-admin/assign-user")}>Assign User</Button>
+        <Button onClick={handleAssignUser}>Assign User</Button>
       </div>
 
-      
-        <DataTable
-          selectable={false}
-          defaultItemsPerPage={10}
-          pagination
-          loading={loading}
-          columns={manage_branches_table_columns}
-          rows={users}
-          actions={(row: any) => (
-            <div className="flex gap-2 justify-center">
-              <ReusablePopover actions={options as any} rowData={row} />
-            </div>
-          )}
-        />
-    
+      <DataTable
+        selectable={false}
+        defaultItemsPerPage={10}
+        pagination
+        loading={loading}
+        columns={manage_branches_table_columns}
+        rows={users}
+        actions={(row: any) => (
+          <div className="flex gap-2 justify-center">
+            <ReusablePopover actions={options} rowData={row} />
+          </div>
+        )}
+      />
 
       <ConfirmationDialog
         requiresPassword
-        onConfirm={(password) => handleDeactivateUser(password as string)}
-        onOpenChange={() => toggleModal("isDeleteModalOpen")}
+        onConfirm={(password: any) => handleDeactivateUser(password)}
+        onOpenChange={handleDeleteModalClose}
         open={modalState.isDeleteModalOpen}
         title="Deactivate User Account"
         variant="destructive"
@@ -156,15 +210,15 @@ function AllSystemUsers() {
 
             <div className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
-                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0" />
                 <span>User will be logged out from all active sessions</span>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0" />
                 <span>All future login attempts will be blocked</span>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0" />
                 <span>Dashboard and portal access will be suspended</span>
               </div>
             </div>
@@ -181,25 +235,20 @@ function AllSystemUsers() {
         confirmText="Deactivate User"
         cancelText="Cancel"
       />
+
       <Overlay
         isOpen={modalState.isPasswordDialogOpen}
-        onClose={() => toggleModal("isPasswordDialogOpen")}
+        onClose={handlePasswordModalClose}
       >
         <PasswordUpdateForm
           userId={String(selectedUser?.id)}
           userName={selectedUser?.username}
-          onSuccess={() => {
-            toggleModal("isPasswordDialogOpen");
-            setSelectedUser(null);
-          }}
-          onCancel={() => {
-            toggleModal("isPasswordDialogOpen");
-            setSelectedUser(null);
-          }}
+          onSuccess={handlePasswordModalClose}
+          onCancel={handlePasswordModalClose}
         />
       </Overlay>
-    </div>
+    </Suspense>
   );
 }
 
-export default AllSystemUsers;
+export default React.memo(AllSystemUsers);

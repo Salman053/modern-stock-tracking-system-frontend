@@ -12,8 +12,9 @@ import { useModalState } from "@/hooks/use-modal-state";
 import { useMutation } from "@/hooks/use-mutation";
 import { IProduct } from "@/types";
 import { FilePenLine, Trash2, Package } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
+import Loading from "../loading";
 
 const Products = () => {
   const { toggleModal, modalState } = useModalState({
@@ -54,13 +55,12 @@ const Products = () => {
     }
   );
 
-  // Calculate products with profit margin
-  const products: IProduct[] = data?.data.so || [];
+  const products: IProduct[] = data?.data || [];
 
   const options = [
     {
       label: "Edit",
-      icon: <FilePenLine size={16} />,
+      icon: <FilePenLine size={12} />,
       onClick: (item: IProduct) => {
         setEditingProduct(item);
         toggleModal("isAddEditProductModalOpen");
@@ -80,7 +80,7 @@ const Products = () => {
   ];
 
   const handleAddProduct = () => {
-    setEditingProduct(null); // Reset editing product when adding new
+    setEditingProduct(null);
     toggleModal("isAddEditProductModalOpen");
   };
 
@@ -111,7 +111,6 @@ const Products = () => {
     setEditingProduct(null);
   };
 
-  // Enhanced table columns with profit margin
   const enhancedColumns = [
     ...products_table_column_branch_admin,
     {
@@ -137,7 +136,7 @@ const Products = () => {
           <span
             className={`px-2 py-1 rounded-full text-xs font-semibold ${color} ${bgColor}`}
           >
-           Rs. {margin}
+            Rs. {margin}
           </span>
         );
       },
@@ -177,32 +176,19 @@ const Products = () => {
         </Button>
       </div>
 
-      {products.length === 0 && !loading ? (
-        <div className="text-center py-12 border rounded-lg">
-          <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Products Found
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Get started by adding your first product to inventory.
-          </p>
-          <Button onClick={handleAddProduct}>Add Your First Product</Button>
-        </div>
-      ) : (
-        <DataTable
-          selectable={false}
-          defaultItemsPerPage={10}
-          pagination={true}
-          columns={enhancedColumns}
-          rows={products as any}
-          loading={loading}
-          actions={(row: any) => (
-            <div className="flex gap-2 justify-center">
-              <ReusablePopover actions={options as any} rowData={row} />
-            </div>
-          )}
-        />
-      )}
+      <DataTable
+        selectable={false}
+        defaultItemsPerPage={10}
+        pagination={true}
+        columns={enhancedColumns}
+        rows={products as any}
+        loading={loading}
+        actions={(row: any) => (
+          <div className="flex gap-2 justify-center">
+            <ReusablePopover actions={options as any} rowData={row} />
+          </div>
+        )}
+      />
 
       {/* Add/Edit Product Modal */}
       <Overlay

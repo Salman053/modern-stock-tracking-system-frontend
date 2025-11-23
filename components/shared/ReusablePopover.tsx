@@ -60,7 +60,7 @@ const ReusablePopover: FC<ReusablePopoverProps> = ({
           <DropdownMenuItem
             key={action.label}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer rounded-md transition-colors",
+              "flex items-start gap-2 px-3 py-2 text-sm cursor-pointer rounded-md transition-colors",
               "focus:bg-accent focus:text-accent-foreground",
               "hover:bg-accent hover:text-accent-foreground",
               action.variant === "destructive" && 
@@ -77,7 +77,7 @@ const ReusablePopover: FC<ReusablePopoverProps> = ({
                 {action.icon}
               </div>
             )}
-            <span className="capitalize">{action.label}</span>
+            <span className="capitalize  ">{action.label}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

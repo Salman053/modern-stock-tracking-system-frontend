@@ -15,8 +15,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter()
+  const router = useRouter();
   const {
     mutate,
     loading: logoutLoading,
@@ -34,7 +33,6 @@ export default function AdminLayout({
       <div className="flex-1  overflow-hidden flex flex-col min-w-0 ">
         {/* Header - Fixed at top */}
         <Header
-        onProfile={()=>router.push("/super-admin/profile")}
           onLogout={() => {
             mutate({ action: "logout" })
               .then(() => {
@@ -46,7 +44,6 @@ export default function AdminLayout({
                 window.location.replace("/sign-in");
               });
           }}
-          user={!loading && (user as any)}
         />
 
         {/* Scrollable Content */}

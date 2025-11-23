@@ -1,4 +1,4 @@
-// components/user/user-profile-form.tsx
+
 "use client";
 
 import * as React from "react";
@@ -23,104 +23,92 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Loader2,
-  User,
-  Mail,
-  Lock,
-  Shield,
-  Calendar,
-  Building,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-} from "lucide-react";
+import { Loader2, User, Mail, Calendar, Building, CheckCircle2 } from "lucide-react";
 import { ConfirmationDialog } from "../shared/confirmation-dialog";
 import { server_base_url } from "@/constant/server-constants";
 import { toast } from "sonner";
 import { useMutation } from "@/hooks/use-mutation";
-import { UserProfileFormData, userProfileSchema } from "@/schema/user-profile-schema";
+import {
+  UserProfileFormData,
+  userProfileSchema,
+} from "@/schema/user-profile-schema";
 import { IUser } from "@/types";
 
 interface UserProfileFormProps {
   userData: IUser;
-  onSuccess?: () => void;
+  onUpdateStart?: () => void;
+  onUpdateSuccess?: () => void;
+  onUpdateError?: () => void;
 }
 
-export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
-  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
-  const [showNewPassword, setShowNewPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+export function UserProfileForm({
+  userData,
+  onUpdateStart,
+  onUpdateSuccess,
+  onUpdateError,
+}: UserProfileFormProps) {
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [formData, setFormData] = React.useState<UserProfileFormData | null>(null);
-
-  const { loading, mutate } = useMutation(
-    `${server_base_url}/users/profile`,
-    {
-      credentials: "include",
-      method: "PATCH",
-      onError: (error) => {
-        toast.error("Update Failed", {
-          description: error?.message || "Failed to update profile. Please try again.",
-        });
-      },
-      onSuccess: (data) => {
-        toast.success("Profile Updated Successfully", {
-          description: "Your profile has been updated successfully.",
-        });
-        form.reset();
-        onSuccess?.();
-      },
-    }
+  const [formData, setFormData] = React.useState<UserProfileFormData | null>(
+    null
   );
+
+  const { loading, mutate } = useMutation(`${server_base_url}/users/update`, {
+    credentials: "include",
+    method: "POST",
+    onError: (error) => {
+      toast.error("Update Failed", {
+        description:
+          error?.message || "Failed to update profile. Please try again.",
+      });
+      onUpdateError?.();
+    },
+    onSuccess: (data) => {
+      toast.success("Profile Updated Successfully", {
+        description: "Your profile has been updated successfully.",
+      });
+      onUpdateSuccess?.();
+    },
+  });
 
   const form = useForm<UserProfileFormData>({
     resolver: zodResolver(userProfileSchema),
     defaultValues: {
       username: userData.username || "",
       email: userData.email || "",
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
     },
   });
+
+  
+  const hasChanges = form.formState.isDirty;
 
   const onSubmit = (data: UserProfileFormData) => {
     setFormData(data);
     setShowConfirmation(true);
+    onUpdateStart?.();
   };
 
-  const handleConfirm = async (password: string) => {
+  const handleConfirm = async (adminPassword: string) => {
     if (!formData) return;
 
     try {
+      
       const payload: any = {
         username: formData.username,
         email: formData.email,
-        admin_password: password,
+        admin_password: adminPassword, 
       };
-
-      // Only include password fields if new password is provided
-      if (formData.newPassword) {
-        payload.current_password = formData.currentPassword;
-        payload.new_password = formData.newPassword;
-      }
 
       await mutate(payload);
     } catch (error: any) {
+      console.error("Update error:", error);
       toast.error("Update Failed", {
-        description: error?.message || "Failed to update profile. Please try again.",
+        description:
+          error?.message || "Failed to update profile. Please try again.",
       });
     } finally {
       setShowConfirmation(false);
     }
   };
-
-  const toggleCurrentPasswordVisibility = () => setShowCurrentPassword(!showCurrentPassword);
-  const toggleNewPasswordVisibility = () => setShowNewPassword(!showNewPassword);
-  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
-
-  const hasPasswordChanges = form.watch("newPassword");
 
   return (
     <>
@@ -144,7 +132,10 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
             <Badge variant="secondary" className="capitalize">
               {userData.role}
             </Badge>
-            <Badge variant={userData.status === "active" ? "default" : "secondary"}>
+            <Badge
+            className="uppercase"
+              variant={userData.status === "active" ? "default" : "secondary"}
+            >
               {userData.status}
             </Badge>
           </div>
@@ -171,7 +162,11 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
                           Username
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your username" {...field} />
+                          <Input
+                            placeholder="Enter your username"
+                            {...field}
+                            disabled={loading}
+                          />
                         </FormControl>
                         <FormDescription>
                           Your unique identifier in the system
@@ -195,6 +190,7 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
                             type="email"
                             placeholder="your.email@company.com"
                             {...field}
+                            disabled={loading}
                           />
                         </FormControl>
                         <FormDescription>
@@ -215,151 +211,20 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
                     <span>Member since</span>
                   </div>
                   <p className="text-sm font-medium">
-                    {new Date(userData.created_at).toLocaleDateString()}
+                    {userData.created_at
+                      ? new Date(userData.created_at).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
-                
+
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building className="h-4 w-4" />
-                    <span>Branch ID</span>
+                    <span>Branch Name</span>
                   </div>
                   <p className="text-sm font-medium">
-                    {userData.branch_id || "Not assigned"}
+                    {userData.branch_name || "Not assigned"}
                   </p>
-                </div>
-              </div>
-
-              {/* Password Change Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                  <Shield className="h-4 w-4" />
-                  PASSWORD CHANGE
-                  <span className="text-xs text-amber-600">(Optional)</span>
-                </div>
-
-                <div className="space-y-4 p-4 border border-amber-200 bg-amber-50 rounded-lg">
-                  <FormField
-                    control={form.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Lock className="h-4 w-4" />
-                          Current Password
-                        </FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              type={showCurrentPassword ? "text" : "password"}
-                              placeholder="Enter current password"
-                              {...field}
-                              className="pr-10"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={toggleCurrentPasswordVisibility}
-                            >
-                              {showCurrentPassword ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          Required only if changing password
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="newPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New Password</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input
-                                type={showNewPassword ? "text" : "password"}
-                                placeholder="Create new password"
-                                {...field}
-                                className="pr-10"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={toggleNewPasswordVisibility}
-                              >
-                                {showNewPassword ? (
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </Button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input
-                                type={showConfirmPassword ? "text" : "password"}
-                                placeholder="Re-enter new password"
-                                {...field}
-                                className="pr-10"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                onClick={toggleConfirmPasswordVisibility}
-                              >
-                                {showConfirmPassword ? (
-                                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                                ) : (
-                                  <Eye className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </Button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {hasPasswordChanges && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                      <p className="text-sm text-blue-800 font-medium">Password Requirements:</p>
-                      <ul className="text-xs text-blue-700 list-disc list-inside space-y-1 mt-1">
-                        <li>Minimum 8 characters</li>
-                        <li>At least one uppercase letter</li>
-                        <li>At least one lowercase letter</li>
-                        <li>At least one number</li>
-                      </ul>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -369,14 +234,14 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
                   type="button"
                   variant="outline"
                   onClick={() => form.reset()}
-                  disabled={loading}
+                  disabled={loading || !hasChanges}
                   className="min-w-24"
                 >
                   Reset
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !hasChanges}
                   className="min-w-32 gap-2"
                 >
                   {loading ? (
@@ -401,7 +266,7 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
       <ConfirmationDialog
         open={showConfirmation}
         onOpenChange={setShowConfirmation}
-        onConfirm={(password: string) => handleConfirm(password)}
+        onConfirm={(password: any) => handleConfirm(password)}
         title="Confirm Profile Update"
         description={
           formData ? (
@@ -418,14 +283,6 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
                   <span className="text-muted-foreground">Email:</span>
                   <span className="font-medium">{formData.email}</span>
                 </div>
-                {formData.newPassword && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Password:</span>
-                    <Badge variant="outline" className="bg-green-100 text-green-800">
-                      Will be updated
-                    </Badge>
-                  </div>
-                )}
               </div>
               <p className="text-sm text-muted-foreground">
                 Please verify that all information is correct before proceeding.
@@ -436,7 +293,7 @@ export function UserProfileForm({ userData, onSuccess }: UserProfileFormProps) {
           )
         }
         confirmText={loading ? "Updating Profile..." : "Confirm Update"}
-        requiresPassword={true}
+        requiresPassword
         passwordLabel="Enter your current password to confirm changes"
       />
     </>

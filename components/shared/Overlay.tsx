@@ -120,7 +120,7 @@ const Overlay: React.FC<OverlayProps> = ({
       {isOpen && (
         <motion.div
           className={cn(
-            "fixed inset-0 cursor-default backdrop-blur-xs bg-black bg-opacity-90 z-50 flex items-center justify-center",
+            "fixed inset-0 cursor-default backdrop-blur-xs bg-background bg-opacity-90 z-50 flex items-center justify-center",
             className
           )}
           onClick={onClose}
@@ -131,7 +131,7 @@ const Overlay: React.FC<OverlayProps> = ({
         >
           <motion.div
             className={cn(
-              "bg-white rounded-lg p-8 shadow-lg max-h-[90vh]  overflow-y-auto pointer-events-auto",
+              "bg-background rounded-lg p-8 shadow-lg max-h-[90vh]  overflow-y-auto pointer-events-auto",
               contentClassName
             )}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}

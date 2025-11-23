@@ -22,9 +22,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { IUser } from "@/types";
 import { ThemeToggleButton } from "./theme-toggle-button";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 interface HeaderProps {
-  user?: IUser;
   onLogout?: () => void;
   onSettings?: () => void;
   onProfile?: () => void;
@@ -34,21 +35,14 @@ interface HeaderProps {
 }
 
 export default function Header({
-  user = {
-    username: "John Doe",
-    email: "john@acme.com",
-    role: "super-admin",
-    status: "active",
-    branch_id: 1,
-    id: 1,
-  },
   onLogout,
   onSettings,
-  onProfile,
   onNotifications,
   notificationCount = 3,
   className,
 }: HeaderProps) {
+  const router = useRouter();
+  const { loading, refetch, user } = useAuth();
 
   return (
     <header
@@ -86,7 +80,7 @@ export default function Header({
             </Badge>
           )}
         </Button> */}
-        <ThemeToggleButton/>
+        <ThemeToggleButton />
 
         {/* User Profile Dropdown */}
         <DropdownMenu>
@@ -130,21 +124,21 @@ export default function Header({
 
             {/* Profile */}
             <DropdownMenuItem
-              onClick={onProfile}
+              onClick={() => router.push(`/${user?.role}/profile`)}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer"
             >
               <User className="h-4 w-4 text-gray-500" />
               <span>Your Profile</span>
             </DropdownMenuItem>
 
-            {/* Settings */}
+            {/* Settings
             <DropdownMenuItem
               onClick={onSettings}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer"
             >
               <Settings className="h-4 w-4 text-gray-500" />
               <span>Settings</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
 
             <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800" />
 

@@ -37,7 +37,7 @@ interface ProfessionalSidebarProps {
 export default function ProfessionalSidebar({
   nav,
   logo,
-  title = "Acme Pro",
+  title = "Stock Master",
   subtitle = "Enterprise",
   user = {
     name: "John Doe",
@@ -143,11 +143,12 @@ export default function ProfessionalSidebar({
               >
                 <Link
                   href={item.href}
+                  
                   className={cn(
                     "flex items-center gap-3 flex-1",
                     collapsed && "justify-center"
                   )}
-                  onClick={(e) => hasSubmenu && e.preventDefault()}
+                  // onClick={(e) => hasSubmenu && e.preventDefault()}
                 >
                   <span
                     className={cn(

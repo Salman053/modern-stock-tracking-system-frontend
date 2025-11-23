@@ -4,15 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -37,7 +29,7 @@ import { toast } from "sonner";
 import { useMutation } from "@/hooks/use-mutation";
 import { server_base_url } from "@/constant/server-constants";
 
-// Password validation schema
+
 const passwordUpdateSchema = z.object({
   newPassword: z.string()
     .min(8, "Password must be at least 8 characters")
@@ -119,7 +111,7 @@ export function PasswordUpdateForm({
 
   const newPassword = form.watch("newPassword");
 
-  // Calculate password strength
+  
   React.useEffect(() => {
     if (!newPassword) {
       setPasswordStrength("weak");
@@ -192,11 +184,7 @@ export function PasswordUpdateForm({
     <>
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <KeyRound className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
+          
           <CardTitle className="flex items-center justify-center gap-2 text-xl">
             {title}
             <Badge variant="outline" className="text-xs">

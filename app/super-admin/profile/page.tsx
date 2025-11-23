@@ -62,13 +62,13 @@ export default function ProfilePage() {
 //     );
 //   }
 
-  return (
+  return (  
     <div className=" ">
       <div className=" mx-auto px-4 items-start flex gap-5">
       
 
         {/* Profile Form */}
-        {user && <UserProfileForm userData={user} />}
+        {user && <UserProfileForm  userData={user} />}
 
         {/* Security Tips */}
         <Card className=" max-w-2xl mx-auto">
