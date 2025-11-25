@@ -14,6 +14,24 @@ export interface IBranch {
   updated_at: any; // Using Date object for better time handling
 }
 
+// types/index.ts
+export interface IEmployee {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  designation: string;
+  cnic: string;
+  user_id: string;
+  branch_id: string;
+  is_permanent: boolean;
+  salary: number;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+}
+
 export interface IUser {
   id: number;
   username: string;
@@ -25,9 +43,27 @@ export interface IUser {
   branch_id: number;
   created_at: string;
   updated_at: string;
-  branch_name?:string
+  branch_name?: string
 }
+export interface ISupplierDue {
+  id: string;
+  supplier_id: number;
+  branch_id: number;
+  stock_movement_id?: number;
+  due_date: string;
+  total_amount: number;
+  supplier_name?: string;
+  branch_name?: string;
+  paid_amount?: number;
+  remaining_amount?: number;
+  status: 'pending' | 'partial' | 'paid' | 'overdue' | 'cancelled';
+  due_type: 'purchase' | 'credit' | 'other';
+  description?: string;
+  created_at: string;
+  updated_at: string;
 
+
+}
 export interface IStockMovement {
   id: string | number;
   product_id: string | number;

@@ -1,5 +1,4 @@
-"use client";
-
+"use client";;
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,10 +47,7 @@ import {
 import { ConfirmationDialog } from "../shared/confirmation-dialog";
 import { server_base_url } from "@/constant/server-constants";
 import { toast } from "sonner";
-import { useFetch } from "@/hooks/use-fetch";
-import { IBranch, IUser } from "@/types";
 import { useMutation } from "@/hooks/use-mutation";
-import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 
 interface AssignUserFormProps {
@@ -61,15 +57,12 @@ interface AssignUserFormProps {
 }
 
 const ROLE_CONFIG = {
-
   "sales-manager": {
     label: "Sales Administrator",
     description: "Manage sales and operations within assigned branch",
     color: "bg-blue-100 text-blue-800",
-  }
-   
-
-  // Add other roles as needed
+  },
+  
 };
 
 const STATUS_CONFIG = {
@@ -90,11 +83,11 @@ const STATUS_CONFIG = {
   },
 };
 
-// Create separate schemas for create and edit modes
+
 const createUserSchema = userRegistrationSchema;
-const editUserSchema = userRegistrationSchema.omit({ 
-  password: true, 
-  confirmPassword: true 
+const editUserSchema = userRegistrationSchema.omit({
+  password: true,
+  confirmPassword: true,
 });
 
 export function AssignUserForm({
@@ -105,8 +98,9 @@ export function AssignUserForm({
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [formData, setFormData] = React.useState<UserRegistrationFormData | null>(null);
-  const {user} = useAuth()
+  const [formData, setFormData] =
+    React.useState<UserRegistrationFormData | null>(null);
+  const { user } = useAuth();
   const isEdit = mode === "edit";
 
   const { loading, mutate } = useMutation(
@@ -139,51 +133,59 @@ export function AssignUserForm({
   );
 
   
-
-  // Use appropriate schema based on mode
   const formSchema = isEdit ? editUserSchema : createUserSchema;
 
   const form = useForm<UserRegistrationFormData>({
-    resolver: zodResolver(formSchema as any),
+    resolver: zodResolver(formSchema.omit({
+      branch_id:true
+    }) as any),
     defaultValues: {
       username: initialData?.username || "",
       email: initialData?.email || "",
       password: "",
       confirmPassword: "",
-      branch_id: initialData?.branch_id || "",
+      branch_id: initialData?.branch_id,
       role: initialData?.role || "",
       status: initialData?.status || "active",
     },
   });
 
   const onSubmit = (data: UserRegistrationFormData) => {
+   
     setFormData(data);
     setShowConfirmation(true);
+    
   };
 
   const handleConfirm = async (password: string) => {
-    if (!formData || !password) return;
+    console.log("Handle confirm called with password:", !!password);
+
+    if (!formData || !password) {
+      toast.warning("Please provide admin password");
+      return;
+    }
 
     try {
       const payload: any = {
         username: formData.username,
         email: formData.email,
         role: formData.role,
-        branch_id: formData.branch_id,
+        branch_id: user?.branch_id, 
         status: formData.status,
         admin_password: password,
       };
 
-      // Only include password for create mode
+      
       if (!isEdit) {
         payload.password = formData.password;
       }
 
-      // Include user_id for edit mode
+      
       if (isEdit && initialData?.id) {
         payload.user_id = initialData.id;
       }
 
+      console.log("Sending payload:", payload);
       await mutate(payload);
     } catch (error: any) {
       toast.error(isEdit ? "Update Failed" : "Creation Failed", {
@@ -202,7 +204,6 @@ export function AssignUserForm({
       email: initialData?.email || "",
       password: "",
       confirmPassword: "",
-      branch_id: initialData?.branch_id || "",
       role: initialData?.role || "",
       status: initialData?.status || "active",
     });
@@ -215,10 +216,15 @@ export function AssignUserForm({
   const toggleConfirmPasswordVisibility = () =>
     setShowConfirmPassword(!showConfirmPassword);
 
-
   const getStatusDescription = (status: keyof typeof STATUS_CONFIG) => {
     return STATUS_CONFIG[status]?.description || "";
   };
+
+  
+  React.useEffect(() => {
+    console.log("Form validity changed:", form.formState.isValid);
+    console.log("Form errors:", form.formState.errors);
+  }, [form.formState.isValid, form.formState.errors]);
 
   return (
     <>
@@ -263,6 +269,7 @@ export function AssignUserForm({
                         <FormLabel className="flex items-center gap-2">
                           <User className="h-4 w-4" />
                           Username
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -271,7 +278,8 @@ export function AssignUserForm({
                           />
                         </FormControl>
                         <FormDescription>
-                          3-20 characters, letters, numbers, and underscores only
+                          3-20 characters, letters, numbers, and underscores
+                          only
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -286,6 +294,7 @@ export function AssignUserForm({
                         <FormLabel className="flex items-center gap-2">
                           <Mail className="h-4 w-4" />
                           Email Address
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -346,7 +355,8 @@ export function AssignUserForm({
                             </div>
                           </FormControl>
                           <FormDescription>
-                            Minimum 8 characters with uppercase, lowercase, and number
+                            Minimum 8 characters with uppercase, lowercase, and
+                            number
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -404,27 +414,36 @@ export function AssignUserForm({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Branch Assignment - Display Only */}
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Branch Assignment
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        value={user?.branch_name || "Current Branch"}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </FormControl>
+                   
+                  </FormItem>
+
+                  {/* Hidden branch_id field for form validation */}
                   <FormField
                     control={form.control}
                     name="branch_id"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
-                          Branch Assignment
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger disabled className="text-left">
-                              <SelectValue defaultValue={user?.branch_id}  placeholder={user?.branch_name} />
-                            </SelectTrigger>
-                          </FormControl>
-                       
-                        </Select>
+                      <FormItem className="hidden">
+                        <FormControl>
+                          <Input
+                            type="hidden"
+                            {...field}
+                            value={String(user?.branch_id || "")}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -585,6 +604,10 @@ export function AssignUserForm({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Email:</span>
                   <span className="font-medium">{formData.email}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Branch:</span>
+                  <span className="font-medium">{user?.branch_name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Role:</span>

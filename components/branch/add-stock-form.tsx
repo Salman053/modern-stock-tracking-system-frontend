@@ -42,6 +42,7 @@ import {
   Plus,
   ArrowRightLeft,
   Warehouse,
+  Lock,
 } from "lucide-react";
 import { ConfirmationDialog } from "../shared/confirmation-dialog";
 import { server_base_url } from "@/constant/server-constants";
@@ -52,11 +53,19 @@ import { IBranch, IProduct, ISupplier } from "@/types";
 import { Option, SmartSelect } from "../shared/smart-select";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "@/components/ui/textarea";
-import { stockMovementSchema, StockMovementSchemaType } from "@/schema/stock-movement-schema";
+import {
+  stockMovementSchema,
+  StockMovementSchemaType,
+} from "@/schema/stock-movement-schema";
 
 interface StockMovementFormProps {
   mode?: "create" | "edit";
-  initialData?: StockMovementSchemaType & { id?: string };
+  initialData?: StockMovementSchemaType & {
+    id?: string;
+    product_name?: string;
+    supplier_name?: string;
+    reference_branch_name?: string;
+  };
   onSuccess?: () => void;
 }
 
@@ -99,16 +108,18 @@ export function StockMovementForm({
   onSuccess,
 }: StockMovementFormProps) {
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [formData, setFormData] = React.useState<StockMovementSchemaType | null>(null);
-  const [selectedMovementType, setSelectedMovementType] = React.useState<string>("");
+  const [formData, setFormData] =
+    React.useState<StockMovementSchemaType | null>(null);
+  const [selectedMovementType, setSelectedMovementType] =
+    React.useState<string>("");
 
   const { user } = useAuth();
   const isEdit = mode === "edit";
 
   const { loading, mutate } = useMutation(
     isEdit
-      ? `${server_base_url}/stock/${initialData?.id}`
-      : `${server_base_url}/stock`,
+      ? `${server_base_url}/stocks/${initialData?.id}`
+      : `${server_base_url}/stocks`,
     {
       credentials: "include",
       method: isEdit ? "PATCH" : "POST",
@@ -117,7 +128,9 @@ export function StockMovementForm({
         toast.error(isEdit ? "Update Failed" : "Creation Failed", {
           description:
             error?.message ||
-            `Failed to ${isEdit ? "update" : "create"} stock movement. Please try again.`,
+            `Failed to ${
+              isEdit ? "update" : "create"
+            } stock movement. Please try again.`,
         });
       },
       onSuccess: (data) => {
@@ -126,17 +139,19 @@ export function StockMovementForm({
             ? "Stock Movement Updated Successfully"
             : "Stock Movement Created Successfully",
           {
-            description: `Stock movement has been ${isEdit ? "updated" : "created"} successfully.`,
+            description: `Stock movement has been ${
+              isEdit ? "updated" : "created"
+            } successfully.`,
           }
         );
-        
+
         form.reset();
         onSuccess?.();
       },
     }
   );
 
-  // Fetch products for the current branch
+  
   const { data: productsData, loading: productsLoading } = useFetch(
     `${server_base_url}/products?branch_id=${user?.branch_id}`,
     {
@@ -146,7 +161,7 @@ export function StockMovementForm({
     }
   );
 
-  // Fetch suppliers
+  
   const { data: suppliersData, loading: suppliersLoading } = useFetch(
     `${server_base_url}/suppliers`,
     {
@@ -156,7 +171,7 @@ export function StockMovementForm({
     }
   );
 
-  // Fetch branches for transfers
+  
   const { data: branchesData, loading: branchesLoading } = useFetch(
     `${server_base_url}/branches`,
     {
@@ -166,21 +181,75 @@ export function StockMovementForm({
     }
   );
 
+  
+  const getInitialProductOption = () => {
+    if (!initialData?.product_id) return [];
+    return [
+      {
+        label: `${initialData.product_name || "Product"} (ID: ${
+          initialData.product_id
+        })`,
+        value: initialData.product_id.toString(),
+      },
+    ];
+  };
+
+  const getInitialSupplierOption = () => {
+    if (!initialData?.supplier_id) return [];
+    return [
+      {
+        label: `${initialData.supplier_name || "Supplier"} (ID: ${
+          initialData.supplier_id
+        })`,
+        value: initialData.supplier_id.toString(),
+      },
+    ];
+  };
+
+  const getInitialBranchOption = () => {
+    if (!initialData?.reference_branch_id) return [];
+    return [
+      {
+        label: `${initialData.reference_branch_name || "Branch"} (ID: ${
+          initialData.reference_branch_id
+        })`,
+        value: initialData.reference_branch_id.toString(),
+      },
+    ];
+  };
+
   const form = useForm<StockMovementSchemaType>({
     resolver: zodResolver(stockMovementSchema as any),
-    defaultValues: initialData || {
-      product_id: "",
-      movement_type: "arrival",
-      supplier_id: "",
-      reference_branch_id: "",
-      quantity: "" as any,
-      unit_price_per_meter: "" as any,
-      paid_amount: "" as any,
-      total_amount: "" as any,
-      date: new Date().toISOString().split('T')[0],
-      notes: "",
-      auto_update_product: true,
-    },
+    defaultValues: initialData
+      ? {
+          ...initialData,
+          
+          product_id: Number(initialData.product_id) || 0,
+          supplier_id: initialData.supplier_id
+            ? Number(initialData.supplier_id)
+            : undefined,
+          reference_branch_id: initialData.reference_branch_id
+            ? Number(initialData.reference_branch_id)
+            : undefined,
+          
+          quantity: Number(initialData.quantity) || 0,
+          unit_price_per_meter: Number(initialData.unit_price_per_meter) || 0,
+          paid_amount: Number(initialData.paid_amount) || 0,
+          total_amount: Number(initialData.total_amount) || 0,
+        }
+      : {
+          product_id: 0,
+          movement_type: "arrival",
+          supplier_id: undefined,
+          reference_branch_id: undefined,
+          quantity: 0,
+          unit_price_per_meter: 0,
+          paid_amount: 0,
+          total_amount: 0,
+          date: new Date().toISOString().split("T")[0],
+          notes: "",
+          auto_update_product: true,
+        },
   });
 
   const onSubmit = (data: StockMovementSchemaType) => {
@@ -199,49 +268,64 @@ export function StockMovementForm({
         admin_password: password,
       };
 
+      
+      if (!["transfer_in", "transfer_out"].includes(formData.movement_type)) {
+        delete (payload as any).reference_branch_id;
+      }
+
+      
+      if (isEdit) {
+        delete (payload as any).product_id;
+        delete (payload as any).supplier_id;
+        delete (payload as any).reference_branch_id;
+        delete (payload as any).movement_type;
+      }
+
       await mutate(payload);
     } catch (error: any) {
       toast.error(isEdit ? "Update Failed" : "Creation Failed", {
         description:
           error?.message ||
-          `Failed to ${isEdit ? "update" : "create"} stock movement. Please try again.`,
+          `Failed to ${
+            isEdit ? "update" : "create"
+          } stock movement. Please try again.`,
       });
     } finally {
       setShowConfirmation(false);
     }
   };
 
-  // Watch form values for dynamic calculations
+  
   const movementType = form.watch("movement_type");
   const quantity = form.watch("quantity");
   const unitPrice = form.watch("unit_price_per_meter");
   const paidAmount = form.watch("paid_amount");
 
-  // Calculate total amount automatically
+  
   React.useEffect(() => {
     if (quantity && unitPrice) {
       const total = quantity * unitPrice;
       form.setValue("total_amount", total);
-      
-      // Calculate remaining amount
-      const remaining = total - (paidAmount || 0);
-      // You can set this to a hidden field or state if needed
     }
-  }, [quantity, unitPrice, paidAmount, form]);
+  }, [quantity, unitPrice, form]);
 
-  // Prepare options for selects
-  const productOptions: Option[] = (productsData?.data || []).map((product: IProduct) => ({
-    label: `${product.name} (${product.company}) - Stock: ${product.quantity}`,
-    value: product.id.toString(),
-  }));
+  
+  const productOptions: Option[] = (productsData?.data || []).map(
+    (product: IProduct) => ({
+      label: `${product.name} (${product.company}) - Stock: ${product.quantity}`,
+      value: product.id.toString(),
+    })
+  );
 
-  const supplierOptions: Option[] = (suppliersData?.data || []).map((supplier: ISupplier) => ({
-    label: `${supplier.name} - ${supplier.phone}`,
-    value: supplier.id.toString(),
-  }));
+  const supplierOptions: Option[] = (suppliersData?.data || []).map(
+    (supplier: ISupplier) => ({
+      label: `${supplier.name} - ${supplier.phone}`,
+      value: supplier.id.toString(),
+    })
+  );
 
   const branchOptions: Option[] = (branchesData?.data || [])
-    .filter((branch: IBranch) => Number(branch.id) !== user?.branch_id) // Exclude current branch
+    .filter((branch: IBranch) => Number(branch.id) !== user?.branch_id)
     .map((branch: IBranch) => ({
       label: `${branch.name} - ${branch.city}`,
       value: branch.id.toString(),
@@ -254,19 +338,19 @@ export function StockMovementForm({
   const getActionDescription = () => {
     const type = movementType as keyof typeof MOVEMENT_TYPE_CONFIG;
     const config = MOVEMENT_TYPE_CONFIG[type];
-    
+
     if (!config) return "";
 
     switch (type) {
-      case 'arrival':
+      case "arrival":
         return "This will: • Increase product stock • Create supplier due if payment not completed • Update inventory records";
-      case 'dispatch':
+      case "dispatch":
         return "This will: • Decrease product stock • Update sales records • Affect available inventory";
-      case 'transfer_in':
+      case "transfer_in":
         return "This will: • Increase product stock in your branch • Create inter-branch due record • Sync with sending branch";
-      case 'transfer_out':
+      case "transfer_out":
         return "This will: • Decrease product stock in your branch • Create inter-branch receivable • Sync with receiving branch";
-      case 'adjustment':
+      case "adjustment":
         return "This will: • Set specific stock quantity • Used for corrections and counts • Update inventory accuracy";
       default:
         return "";
@@ -316,17 +400,49 @@ export function StockMovementForm({
                         <FormLabel className="flex items-center gap-2">
                           <Package className="h-4 w-4" />
                           Product
+                          {isEdit && (
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                          )}
                         </FormLabel>
-                        <SmartSelect
-                          options={productOptions}
-                          selected={field.value ? [field.value] : []}
-                          onChange={(value) => form.setValue("product_id", value[0])}
-                          placeholder="Select product"
-                          isMulti={false}
-                        //   loading={productsLoading}
-                        />
+                        {isEdit ? (
+                          <div className="relative">
+                            <SmartSelect
+                              options={getInitialProductOption()}
+                              selected={getInitialProductOption().map(
+                                (opt) => opt.value
+                              )}
+                              onChange={() => {}} 
+                              placeholder=""
+                              isMulti={false}
+                              disabled={true}
+                            />
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
+                              <Badge
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                <Lock className="h-3 w-3" />
+                                Cannot change product
+                              </Badge>
+                            </div>
+                          </div>
+                        ) : (
+                          <SmartSelect
+                            options={productOptions}
+                            selected={
+                              field.value ? [field.value.toString()] : []
+                            }
+                            onChange={(value) =>
+                              form.setValue("product_id", Number(value[0]))
+                            }
+                            placeholder="Select product"
+                            isMulti={false}
+                          />
+                        )}
                         <FormDescription>
-                          Choose the product for this movement
+                          {isEdit
+                            ? "Product cannot be changed for existing movements"
+                            : "Choose the product for this movement"}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -341,42 +457,92 @@ export function StockMovementForm({
                         <FormLabel className="flex items-center gap-2">
                           <Truck className="h-4 w-4" />
                           Movement Type
+                          {isEdit && (
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                          )}
                         </FormLabel>
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setSelectedMovementType(value);
-                          }}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select movement type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Object.entries(MOVEMENT_TYPE_CONFIG).map(
-                              ([value, config]) => {
-                                const IconComponent = config.icon;
-                                return (
-                                  <SelectItem key={value} value={value}>
-                                    <div className="flex flex-col">
-                                      <div className="flex items-center gap-2">
-                                        <IconComponent className="h-4 w-4" />
-                                        <span>{config.label}</span>
+                        {isEdit ? (
+                          <div className="relative">
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={true}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.entries(MOVEMENT_TYPE_CONFIG).map(
+                                  ([value, config]) => {
+                                    const IconComponent = config.icon;
+                                    return (
+                                      <SelectItem key={value} value={value}>
+                                        <div className="flex flex-col">
+                                          <div className="flex items-center gap-2">
+                                            <IconComponent className="h-4 w-4" />
+                                            <span>{config.label}</span>
+                                          </div>
+                                          <span className="text-xs text-muted-foreground">
+                                            {config.description}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  }
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
+                              <Badge
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                <Lock className="h-3 w-3" />
+                                Cannot change type
+                              </Badge>
+                            </div>
+                          </div>
+                        ) : (
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setSelectedMovementType(value);
+                            }}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select movement type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Object.entries(MOVEMENT_TYPE_CONFIG).map(
+                                ([value, config]) => {
+                                  const IconComponent = config.icon;
+                                  return (
+                                    <SelectItem key={value} value={value}>
+                                      <div className="flex flex-col">
+                                        <div className="flex items-center gap-2">
+                                          <IconComponent className="h-4 w-4" />
+                                          <span>{config.label}</span>
+                                        </div>
+                                        <span className="text-xs text-muted-foreground">
+                                          {config.description}
+                                        </span>
                                       </div>
-                                      <span className="text-xs text-muted-foreground">
-                                        {config.description}
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                );
-                              }
-                            )}
-                          </SelectContent>
-                        </Select>
+                                    </SelectItem>
+                                  );
+                                }
+                              )}
+                            </SelectContent>
+                          </Select>
+                        )}
                         <FormDescription>
-                          {getMovementDescription(field.value as keyof typeof MOVEMENT_TYPE_CONFIG)}
+                          {getMovementDescription(
+                            field.value as keyof typeof MOVEMENT_TYPE_CONFIG
+                          )}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -387,7 +553,7 @@ export function StockMovementForm({
                 {/* Dynamic Fields Based on Movement Type */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Supplier Field - Show for arrival */}
-                  {(movementType === 'arrival') && (
+                  {movementType === "arrival" && (
                     <FormField
                       control={form.control}
                       name="supplier_id"
@@ -396,17 +562,49 @@ export function StockMovementForm({
                           <FormLabel className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
                             Supplier
+                            {isEdit && (
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                            )}
                           </FormLabel>
-                          <SmartSelect
-                            options={supplierOptions}
-                            selected={field.value ? [field.value] : []}
-                            onChange={(value) => form.setValue("supplier_id", value[0])}
-                            placeholder="Select supplier"
-                            isMulti={false}
-                            // loading={suppliersLoading}
-                          />
+                          {isEdit ? (
+                            <div className="relative">
+                              <SmartSelect
+                                options={getInitialSupplierOption()}
+                                selected={getInitialSupplierOption().map(
+                                  (opt) => opt.value
+                                )}
+                                onChange={() => {}}
+                                placeholder=""
+                                isMulti={false}
+                                disabled={true}
+                              />
+                              <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
+                                <Badge
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  <Lock className="h-3 w-3" />
+                                  Cannot change supplier
+                                </Badge>
+                              </div>
+                            </div>
+                          ) : (
+                            <SmartSelect
+                              options={supplierOptions}
+                              selected={
+                                field.value ? [field.value?.toString()] : []
+                              }
+                              onChange={(value) =>
+                                form.setValue("supplier_id", Number(value[0]))
+                              }
+                              placeholder="Select supplier"
+                              isMulti={false}
+                            />
+                          )}
                           <FormDescription>
-                            Required for stock arrivals
+                            {isEdit
+                              ? "Supplier cannot be changed for existing movements"
+                              : "Required for stock arrivals"}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -415,7 +613,8 @@ export function StockMovementForm({
                   )}
 
                   {/* Reference Branch Field - Show for transfers */}
-                  {(movementType === 'transfer_in' || movementType === 'transfer_out') && (
+                  {(movementType === "transfer_in" ||
+                    movementType === "transfer_out") && (
                     <FormField
                       control={form.control}
                       name="reference_branch_id"
@@ -423,20 +622,61 @@ export function StockMovementForm({
                         <FormItem>
                           <FormLabel className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
-                            {movementType === 'transfer_in' ? 'From Branch' : 'To Branch'}
+                            {movementType === "transfer_in"
+                              ? "From Branch"
+                              : "To Branch"}
+                            {isEdit && (
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                            )}
                           </FormLabel>
-                          <SmartSelect
-                            options={branchOptions}
-                            selected={field.value ? [field.value] : []}
-                            onChange={(value) => form.setValue("reference_branch_id", value[0])}
-                            placeholder={`Select ${movementType === 'transfer_in' ? 'source' : 'destination'} branch`}
-                            isMulti={false}
-                            // loading={branchesLoading}    
-                          />
+                          {isEdit ? (
+                            <div className="relative">
+                              <SmartSelect
+                                options={getInitialBranchOption()}
+                                selected={getInitialBranchOption().map(
+                                  (opt) => opt.value
+                                )}
+                                onChange={() => {}}
+                                placeholder=""
+                                isMulti={false}
+                                disabled={true}
+                              />
+                              <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
+                                <Badge
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  <Lock className="h-3 w-3" />
+                                  Cannot change branch
+                                </Badge>
+                              </div>
+                            </div>
+                          ) : (
+                            <SmartSelect
+                              options={branchOptions}
+                              selected={
+                                field.value ? [field.value?.toString()] : []
+                              }
+                              onChange={(value) =>
+                                form.setValue(
+                                  "reference_branch_id",
+                                  Number(value[0])
+                                )
+                              }
+                              placeholder={`Select ${
+                                movementType === "transfer_in"
+                                  ? "source"
+                                  : "destination"
+                              } branch`}
+                              isMulti={false}
+                            />
+                          )}
                           <FormDescription>
-                            {movementType === 'transfer_in' 
-                              ? 'Branch sending the stock' 
-                              : 'Branch receiving the stock'}
+                            {isEdit
+                              ? "Reference branch cannot be changed"
+                              : movementType === "transfer_in"
+                              ? "Branch sending the stock"
+                              : "Branch receiving the stock"}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -466,7 +706,6 @@ export function StockMovementForm({
                 />
               </div>
 
-              {/* Quantity & Pricing Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground my-7">
                   <DollarSign className="h-4 w-4" />
@@ -521,9 +760,7 @@ export function StockMovementForm({
                             }
                           />
                         </FormControl>
-                        <FormDescription>
-                          Price per unit/meter
-                        </FormDescription>
+                        <FormDescription>Price per unit/meter</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -592,21 +829,31 @@ export function StockMovementForm({
                       </span>
                       <Badge
                         variant={
-                          (form.watch("total_amount") - (form.watch("paid_amount") || 0)) > 0
+                          form.watch("total_amount") -
+                            (form.watch("paid_amount") || 0) >
+                          0
                             ? "outline"
                             : "default"
                         }
                         className={
-                          (form.watch("total_amount") - (form.watch("paid_amount") || 0)) > 0
+                          form.watch("total_amount") -
+                            (form.watch("paid_amount") || 0) >
+                          0
                             ? "bg-amber-100 text-amber-800"
                             : "bg-green-100 text-green-800"
                         }
                       >
-                        Rs. {(form.watch("total_amount") - (form.watch("paid_amount") || 0)).toFixed(2)}
+                        Rs.{" "}
+                        {(
+                          form.watch("total_amount") -
+                          (form.watch("paid_amount") || 0)
+                        ).toFixed(2)}
                       </Badge>
                     </div>
                     <p className="text-xs text-blue-700 mt-1">
-                      {(form.watch("total_amount") - (form.watch("paid_amount") || 0)) > 0
+                      {form.watch("total_amount") -
+                        (form.watch("paid_amount") || 0) >
+                      0
                         ? "This amount will be recorded as due"
                         : "Full payment completed"}
                     </p>
@@ -655,7 +902,8 @@ export function StockMovementForm({
                       <div className="space-y-1 leading-none">
                         <FormLabel>Auto Update Product Stock</FormLabel>
                         <FormDescription>
-                          When checked, the product stock quantity will be automatically updated based on this movement
+                          When checked, the product stock quantity will be
+                          automatically updated based on this movement
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -723,14 +971,20 @@ export function StockMovementForm({
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={showConfirmation}
+        
         onOpenChange={setShowConfirmation}
         onConfirm={(password: any) => handleConfirm(password)}
-        title={isEdit ? "Confirm Stock Movement Update" : "Confirm Stock Movement Creation"}
+        title={
+          isEdit
+            ? "Confirm Stock Movement Update"
+            : "Confirm Stock Movement Creation"
+        }
         description={
           formData ? (
             <div className="space-y-3">
               <p>
-                You are about to {isEdit ? "update" : "create"} a stock movement with the following details:
+                You are about to {isEdit ? "update" : "create"} a stock movement
+                with the following details:
               </p>
               <div className="bg-muted/50 rounded-lg p-3 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -738,10 +992,16 @@ export function StockMovementForm({
                   <Badge
                     variant="outline"
                     className={
-                      MOVEMENT_TYPE_CONFIG[formData.movement_type as keyof typeof MOVEMENT_TYPE_CONFIG]?.color
+                      MOVEMENT_TYPE_CONFIG[
+                        formData.movement_type as keyof typeof MOVEMENT_TYPE_CONFIG
+                      ]?.color
                     }
                   >
-                    {MOVEMENT_TYPE_CONFIG[formData.movement_type as keyof typeof MOVEMENT_TYPE_CONFIG]?.label}
+                    {
+                      MOVEMENT_TYPE_CONFIG[
+                        formData.movement_type as keyof typeof MOVEMENT_TYPE_CONFIG
+                      ]?.label
+                    }
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -750,47 +1010,80 @@ export function StockMovementForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Unit Price:</span>
-                  <span className="font-medium">Rs. {formData.unit_price_per_meter}/m</span>
+                  <span className="font-medium">
+                    Rs. {formData.unit_price_per_meter}/m
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Total Amount:</span>
-                  <span className="font-medium">Rs. {formData.total_amount}</span>
+                  <span className="font-medium">
+                    Rs. {formData.total_amount}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Paid Amount:</span>
-                  <span className="font-medium">Rs. {formData.paid_amount || 0}</span>
+                  <span className="font-medium">
+                    Rs. {formData.paid_amount || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Remaining:</span>
                   <span className="font-medium">
-                    Rs. {(formData.total_amount - (formData.paid_amount || 0)).toFixed(2)}
+                    Rs.{" "}
+                    {(
+                      formData.total_amount - (formData.paid_amount || 0)
+                    ).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Auto Update:</span>
-                  <Badge variant="outline" className={formData.auto_update_product ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                  <Badge
+                    variant="outline"
+                    className={
+                      formData.auto_update_product
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                    }
+                  >
                     {formData.auto_update_product ? "Enabled" : "Disabled"}
                   </Badge>
                 </div>
               </div>
-              
-              {/* Database Action Summary */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">Database Actions:</h4>
-                <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
-                  {formData.auto_update_product && (
-                    <li>Update product stock quantity in inventory</li>
-                  )}
-                  {formData.movement_type === 'arrival' && formData.supplier_id && (
-                    <li>Create supplier due record for remaining amount</li>
-                  )}
-                  {(formData.movement_type === 'transfer_in' || formData.movement_type === 'transfer_out') && (
-                    <li>Create inter-branch due record</li>
-                  )}
-                  <li>Record complete transaction history</li>
-                  <li>Update financial records and balances</li>
-                </ul>
-              </div>
+
+                  {/* {isEdit && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <h4 className="text-sm font-medium text-yellow-800 mb-2">
+                        Edit Mode Restrictions:
+                      </h4>
+                      <ul className="text-xs text-yellow-700 space-y-1 list-disc list-inside">
+                        <li>Product selection cannot be changed</li>
+                        <li>Movement type cannot be changed</li>
+                        <li>Supplier/Reference branch cannot be changed</li>
+                        <li>Only quantity, pricing, and notes can be updated</li>
+                      </ul>
+                    </div>
+                  )} */}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="text-sm font-medium text-blue-800 mb-2">
+                    Database Actions:
+                  </h4>
+                  <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                    {formData.auto_update_product && (
+                      <li>Update product stock quantity in inventory</li>
+                    )}
+                    {formData.movement_type === "arrival" &&
+                      formData.supplier_id && (
+                        <li>Create supplier due record for remaining amount</li>
+                      )}
+                    {(formData.movement_type === "transfer_in" ||
+                      formData.movement_type === "transfer_out") && (
+                      <li>Create inter-branch due record</li>
+                    )}
+                    <li>Record complete transaction history</li>
+                    <li>Update financial records and balances</li>
+                  </ul>
+                </div>
 
               <p className="text-sm text-muted-foreground">
                 {isEdit

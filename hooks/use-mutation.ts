@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 interface ServerError {
   success: false;
@@ -25,6 +25,8 @@ interface MutationOptions<TData, TVariables> extends RequestInit {
   optimisticUpdate?: (variables: TVariables) => void;
   /** Rollback optimistic update on error */
   rollbackOptimisticUpdate?: (variables: TVariables) => void;
+  /** Minimum loading duration in ms (for better UX) */
+  minLoadingDuration?: number;
 }
 
 export function useMutation<TData = any, TVariables = any>(
@@ -37,16 +39,19 @@ export function useMutation<TData = any, TVariables = any>(
     onSettled, 
     optimisticUpdate, 
     rollbackOptimisticUpdate,
+    minLoadingDuration = 400, // Default 400ms for better UX
     ...fetchOptions 
   } = options;
 
   const [data, setData] = useState<ServerResponse<TData> | null>(null);
   const [error, setError] = useState<ServerError | Error | null>(null);
   const [loading, setLoading] = useState(false);
+  const loadingStartTimeRef = useRef<number>(0);
 
   const mutate = useCallback(
     async (variables?: TVariables) => {
       try {
+        loadingStartTimeRef.current = Date.now();
         setLoading(true);
         setError(null);
         setData(null);
@@ -68,12 +73,17 @@ export function useMutation<TData = any, TVariables = any>(
         });
 
         let responseData;
-        console.log(responseData)
+        console.log(responseData);
+        
         try {
           responseData = await res.json();
         } catch (parseError) {
           throw new Error("Invalid JSON response from server");
         }
+
+        // Calculate remaining time to meet minimum loading duration
+        const elapsed = Date.now() - loadingStartTimeRef.current;
+        const remainingTime = Math.max(0, minLoadingDuration - elapsed);
 
         // Handle server error responses (success: false)
         if (!res.ok || (responseData && responseData.success === false)) {
@@ -84,6 +94,9 @@ export function useMutation<TData = any, TVariables = any>(
             code: responseData?.code,
             timestamp: responseData?.timestamp
           };
+
+          // Wait for minimum loading duration before updating state
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
 
           // Rollback optimistic update if provided
           if (rollbackOptimisticUpdate && variables) {
@@ -97,6 +110,9 @@ export function useMutation<TData = any, TVariables = any>(
 
         // Handle success response
         if (responseData && responseData.success === true) {
+          // Wait for minimum loading duration before updating state
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+          
           setData(responseData);
           onSuccess?.(responseData);
         } else {
@@ -106,6 +122,10 @@ export function useMutation<TData = any, TVariables = any>(
             message: "Unexpected response format from server",
             errors: ["Server response missing success flag"]
           };
+          
+          // Wait for minimum loading duration before updating state
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+          
           setError(formatError);
           onError?.(formatError);
         }
@@ -113,6 +133,13 @@ export function useMutation<TData = any, TVariables = any>(
       } catch (err: any) {
         const errorObj: Error = err instanceof Error ? err : new Error(err?.message || "Network request failed");
         
+        // Calculate remaining time to meet minimum loading duration
+        const elapsed = Date.now() - loadingStartTimeRef.current;
+        const remainingTime = Math.max(0, minLoadingDuration - elapsed);
+        
+        // Wait for minimum loading duration before updating state
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+
         // Rollback optimistic update if provided
         if (rollbackOptimisticUpdate && variables) {
           rollbackOptimisticUpdate(variables);
@@ -125,7 +152,7 @@ export function useMutation<TData = any, TVariables = any>(
         onSettled?.();
       }
     },
-    [url, JSON.stringify(fetchOptions), onSuccess, onError, onSettled, optimisticUpdate, rollbackOptimisticUpdate]
+    [url, JSON.stringify(fetchOptions), onSuccess, onError, onSettled, optimisticUpdate, rollbackOptimisticUpdate, minLoadingDuration]
   );
 
   const reset = useCallback(() => {

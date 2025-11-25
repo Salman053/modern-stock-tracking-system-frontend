@@ -2,7 +2,7 @@ import { Package, TrendingUp, Shield, Clock } from 'lucide-react';
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
         {/* Logo/Icon */}
         <div className="flex justify-center mb-6">

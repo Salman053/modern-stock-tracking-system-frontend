@@ -32,6 +32,8 @@ interface UseFetchOptions extends Omit<RequestInit, "cache"> {
   onError?: (error: ServerError | Error) => void;
   /** Custom success handler */
   onSuccess?: (data: ServerResponse<any>) => void;
+  /** Minimum loading duration in ms (for better UX) */
+  minLoadingDuration?: number;
 }
 
 export function useFetch<T = any>(
@@ -46,6 +48,7 @@ export function useFetch<T = any>(
     transform,
     onError,
     onSuccess,
+    minLoadingDuration = 400, // Default 400ms for better UX
     ...fetchOptions
   } = options;
 
@@ -55,6 +58,7 @@ export function useFetch<T = any>(
 
   const controllerRef = useRef<AbortController | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingStartTimeRef = useRef<number>(0);
 
   /** Core fetch logic */
   const fetchData = useCallback(async () => {
@@ -77,6 +81,7 @@ export function useFetch<T = any>(
     const ctrl = new AbortController();
     controllerRef.current = ctrl;
 
+    loadingStartTimeRef.current = Date.now();
     setLoading(true);
     setError(null);
 
@@ -95,6 +100,10 @@ export function useFetch<T = any>(
         throw new Error("Invalid JSON response from server");
       }
 
+      // Calculate remaining time to meet minimum loading duration
+      const elapsed = Date.now() - loadingStartTimeRef.current;
+      const remainingTime = Math.max(0, minLoadingDuration - elapsed);
+
       // Handle server error responses
       if (!res.ok || (responseData && responseData.success === false)) {
         const serverError: ServerError = {
@@ -105,6 +114,9 @@ export function useFetch<T = any>(
           timestamp: responseData?.timestamp
         };
 
+        // Wait for minimum loading duration before updating state
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         setError(serverError);
         onError?.(serverError);
         return;
@@ -113,6 +125,10 @@ export function useFetch<T = any>(
       // Handle success response
       if (responseData && responseData.success === true) {
         const transformedData = transform ? transform(responseData) : responseData;
+        
+        // Wait for minimum loading duration before updating state
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         setData(transformedData);
         
         if (cache && typeof window !== "undefined") {
@@ -127,6 +143,10 @@ export function useFetch<T = any>(
           message: "Unexpected response format from server",
           errors: ["Server response missing success flag"]
         };
+        
+        // Wait for minimum loading duration before updating state
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         setError(formatError);
         onError?.(formatError);
       }
@@ -134,13 +154,21 @@ export function useFetch<T = any>(
     } catch (err: any) {
       if (err.name !== "AbortError") {
         const errorObj: Error = err instanceof Error ? err : new Error(err?.message || "Network request failed");
+        
+        // Calculate remaining time to meet minimum loading duration
+        const elapsed = Date.now() - loadingStartTimeRef.current;
+        const remainingTime = Math.max(0, minLoadingDuration - elapsed);
+        
+        // Wait for minimum loading duration before updating state
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        
         setError(errorObj);
         onError?.(errorObj);
       }
     } finally {
       setLoading(false);
     }
-  }, [url, cache, JSON.stringify(fetchOptions), transform, onError, onSuccess]);
+  }, [url, cache, JSON.stringify(fetchOptions), transform, onError, onSuccess, minLoadingDuration]);
 
   /** Auto-fetch on mount or deps change */
   useEffect(() => {

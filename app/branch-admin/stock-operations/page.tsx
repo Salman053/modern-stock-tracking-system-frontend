@@ -21,8 +21,11 @@ const StockOperation = () => {
     isDeleteStockModalOpen: false,
   });
 
-  const [selectedMovement, setSelectedMovement] = useState<IStockMovement | null>(null);
-  const [editingMovement, setEditingMovement] = useState<IStockMovement | null>(null);
+  const [selectedMovement, setSelectedMovement] =
+    useState<IStockMovement | null>(null);
+  const [editingMovement, setEditingMovement] = useState<IStockMovement | null>(
+    null
+  );
 
   const { data, error, loading, refetch } = useFetch(
     `${server_base_url}/stocks`,
@@ -33,14 +36,15 @@ const StockOperation = () => {
   );
 
   const { mutate: deleteStockMovement, loading: deleteLoading } = useMutation(
-    `${server_base_url}/stock/${selectedMovement?.id}`,
+    `${server_base_url}/stocks/${selectedMovement?.id}`,
     {
       credentials: "include",
       method: "DELETE",
       onError: (error: any) => {
         toast.error("Delete Failed", {
           description:
-            error?.message || "Failed to delete stock movement. Please try again.",
+            error?.message ||
+            "Failed to delete stock movement. Please try again.",
         });
       },
       onSuccess: () => {
@@ -99,7 +103,8 @@ const StockOperation = () => {
     } catch (error: any) {
       toast.error("Cancellation Failed", {
         description:
-          error?.message || "Failed to cancel stock movement. Please try again.",
+          error?.message ||
+          "Failed to cancel stock movement. Please try again.",
       });
     }
   };
@@ -113,13 +118,26 @@ const StockOperation = () => {
     const config = {
       arrival: { label: "Arrival", color: "bg-green-100 text-green-800" },
       dispatch: { label: "Dispatch", color: "bg-blue-100 text-blue-800" },
-      transfer_in: { label: "Transfer In", color: "bg-purple-100 text-purple-800" },
-      transfer_out: { label: "Transfer Out", color: "bg-orange-100 text-orange-800" },
-      adjustment: { label: "Adjustment", color: "bg-yellow-100 text-yellow-800" },
+      transfer_in: {
+        label: "Transfer In",
+        color: "bg-purple-100 text-purple-800",
+      },
+      transfer_out: {
+        label: "Transfer Out",
+        color: "bg-orange-100 text-orange-800",
+      },
+      adjustment: {
+        label: "Adjustment",
+        color: "bg-yellow-100 text-yellow-800",
+      },
     }[type];
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${config?.color || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          config?.color || "bg-gray-100 text-gray-800"
+        }`}
+      >
         {config?.label || type}
       </span>
     );
@@ -133,7 +151,11 @@ const StockOperation = () => {
     }[status];
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${config?.color || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          config?.color || "bg-gray-100 text-gray-800"
+        }`}
+      >
         {config?.label || status}
       </span>
     );
@@ -165,7 +187,6 @@ const StockOperation = () => {
       sortable: true,
       render: (value: number) => `Rs. ${value?.toLocaleString()}`,
     },
-   
   ];
 
   if (error) {
@@ -212,7 +233,9 @@ const StockOperation = () => {
           <p className="text-gray-500 mb-4">
             Get started by recording your first stock movement.
           </p>
-          <Button onClick={handleAddStockMovement}>Record First Movement</Button>
+          <Button onClick={handleAddStockMovement}>
+            Record First Movement
+          </Button>
         </div>
       ) : (
         <DataTable
@@ -239,20 +262,40 @@ const StockOperation = () => {
         <StockMovementForm
           mode={editingMovement ? "edit" : "create"}
           initialData={
-            editingMovement || {
-              auto_update_product: true,
-              date: new Date().toISOString().split('T')[0],
-              movement_type: "arrival",
-              product_id: "",
-              quantity: "" as any,
-              total_amount: "" as any,
-              unit_price_per_meter: "" as any,
-              id: "",
-              notes: "",
-              paid_amount: "" as any,
-              reference_branch_id: "",
-              supplier_id: "",
-            } as any
+            editingMovement
+              ? {
+                  ...editingMovement,
+                  product_id: Number(editingMovement.product_id),
+                  supplier_id: editingMovement.supplier_id
+                    ? Number(editingMovement.supplier_id)
+                    : undefined,
+                  reference_branch_id: editingMovement.reference_branch_id
+                    ? Number(editingMovement.reference_branch_id)
+                    : undefined,
+                  quantity: Number(editingMovement.quantity),
+                  paid_amount: Number(editingMovement.paid_amount),
+                  total_amount: Number(editingMovement.total_amount),
+                  unit_price_per_meter: Number(
+                    editingMovement.unit_price_per_meter
+                  ),
+                  auto_update_product: editingMovement.auto_update_product
+                    ? true
+                    : false,
+                }
+              : ({
+                  auto_update_product: true,
+                  date: new Date().toISOString().split("T")[0],
+                  movement_type: "arrival",
+                  product_id: 0,
+                  quantity: 0,
+                  total_amount: 0,
+                  unit_price_per_meter: 0,
+                  id: "",
+                  notes: "",
+                  paid_amount: 0,
+                  reference_branch_id: undefined,
+                  supplier_id: undefined,
+                } as any)
           }
           onSuccess={handleFormSuccess}
         />
@@ -280,16 +323,19 @@ const StockOperation = () => {
                   <Truck className="h-8 w-8 text-amber-600" />
                   <div>
                     <p className="font-semibold text-amber-800">
-                      {selectedMovement.movement_type?.toUpperCase()} - {selectedMovement.product_name}
+                      {selectedMovement.movement_type?.toUpperCase()} -{" "}
+                      {selectedMovement.product_name}
                     </p>
                     <p className="text-sm text-amber-700">
                       Quantity: {selectedMovement.quantity} units
                     </p>
                     <p className="text-sm text-amber-600 mt-1">
-                      Amount: Rs. {selectedMovement.total_amount?.toLocaleString()}
+                      Amount: Rs.{" "}
+                      {selectedMovement.total_amount?.toLocaleString()}
                     </p>
                     <p className="text-sm text-amber-600">
-                      Date: {new Date(selectedMovement.date).toLocaleDateString()}
+                      Date:{" "}
+                      {new Date(selectedMovement.date).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -303,7 +349,8 @@ const StockOperation = () => {
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>
-                    Product stock quantities will be reverted if auto-update was enabled
+                    Product stock quantities will be reverted if auto-update was
+                    enabled
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -319,8 +366,9 @@ const StockOperation = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                 <p className="text-sm text-blue-800 font-medium">Note:</p>
                 <p className="text-sm text-blue-700">
-                  This action will reverse all automatic updates made by this stock movement.
-                  Cancelled movements are preserved in records for audit purposes.
+                  This action will reverse all automatic updates made by this
+                  stock movement. Cancelled movements are preserved in records
+                  for audit purposes.
                 </p>
               </div>
             </div>

@@ -103,7 +103,7 @@ export function ProductForm({
     null
   );
 
-  const {user} = useAuth()
+  const { user } = useAuth();
   const isEdit = mode === "edit";
 
   const { loading, mutate } = useMutation(
@@ -134,7 +134,7 @@ export function ProductForm({
             } successfully.`,
           }
         );
-        
+
         form.reset();
         onSuccess?.();
       },
@@ -175,8 +175,8 @@ export function ProductForm({
     try {
       await mutate({
         ...formData,
-        user_id:user?.id,
-        branch_id:user?.branch_id,
+        user_id: user?.id,
+        branch_id: user?.branch_id,
         admin_password: password,
       });
     } catch (error: any) {
@@ -347,7 +347,7 @@ export function ProductForm({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <Hash className="h-4 w-4" />
-                          Quantity
+                          Quantity /meter
                         </FormLabel>
                         <FormControl>
                           <Input

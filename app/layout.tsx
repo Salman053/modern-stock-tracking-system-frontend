@@ -30,7 +30,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased   font-sans`}
       >
         <ThemeProvider
           attribute="class"
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           disableTransitionOnChange
         >
           {children}
-          <Toaster 
+          <Toaster
             position="top-right"
             duration={4000}
             richColors

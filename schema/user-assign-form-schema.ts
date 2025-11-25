@@ -17,7 +17,7 @@ export const userRegistrationSchema = z.object({
   confirmPassword: z.string(),
 
   branch_id: z.string()
-    .min(1, "Please select a branch"),
+    .min(1, "Please select a branch").optional(),
 
   role: z.string()
     .min(1, "Please select a role"),

@@ -260,7 +260,7 @@ const DataTable: React.FC<DataTableProps> = memo(
     loading = false,
     rows = [],
     actions,
-    pagination = true,
+    pagination = false,
     selectable = true,
     onRowSelect,
     itemsPerPageOptions = [10, 20, 30, 50],
