@@ -48,6 +48,13 @@ export const branchAdminNav: NavItem[] = [
     title: "Employees",
     href: "/branch-admin/employees",
     icon: <User2 className="h-5 w-5" />,
+    submenu: [
+      { title: "Manage Employees", href: "/branch-admin/employees" },
+      {
+        title: "Salary Payments",
+        href: "/branch-admin/employees/salary-payments",
+      },
+    ],
   },
 ];
 
