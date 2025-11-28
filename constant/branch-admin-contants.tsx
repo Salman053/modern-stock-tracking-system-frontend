@@ -1,6 +1,8 @@
+import { formatCurrency } from "@/lib/currency-utils";
 import { IEmployee, NavItem } from "@/types";
 import {
   Box,
+  Calendar,
   Folders,
   LayoutDashboard,
   Package,
@@ -48,16 +50,69 @@ export const branchAdminNav: NavItem[] = [
     title: "Employees",
     href: "/branch-admin/employees",
     icon: <User2 className="h-5 w-5" />,
-    submenu: [
-      { title: "Manage Employees", href: "/branch-admin/employees" },
-      {
-        title: "Salary Payments",
-        href: "/branch-admin/employees/salary-payments",
-      },
-    ],
   },
 ];
 
+// constant/branch-admin-contants.ts
+export const salary_payments_table_column_branch_admin = [
+  {
+    label: "ID",
+    key: "id",
+    sortable: true,
+  },
+
+  {
+    label: "Amount",
+    key: "amount",
+    sortable: true,
+    render: (value: number) => (
+      <span className="font-semibold text-sm text-green-600">
+        {formatCurrency(value)}
+      </span>
+    ),
+  },
+  {
+    label: "Date",
+    key: "date",
+    sortable: true,
+    render: (value: string) => (
+      <div className="flex items-center gap-2">
+        <Calendar className="h-4 w-4 text-gray-500" />
+        <span className="text-sm">{new Date(value).toLocaleDateString()}</span>
+      </div>
+    ),
+  },
+  {
+    label: "Description",
+    key: "description",
+    render: (value: string) => (
+      <div className="max-w-[200px]">
+        <p className="text-sm truncate" title={value}>
+          {value || "No description"}
+        </p>
+      </div>
+    ),
+  },
+  {
+    label: "Status",
+    key: "status",
+    render: () => (
+      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+        Paid
+      </span>
+    ),
+  },
+  {
+    label: "Created",
+    key: "created_at",
+    sortable: true,
+    render: (value: string) => (
+      <span className="text-sm text-gray-500">
+        {new Date(value).toLocaleDateString()}
+      </span>
+    ),
+  },
+];
 // constant/branch-admin-contants.ts
 export const employees_table_column_branch_admin = [
   {
@@ -122,7 +177,9 @@ export const employees_table_column_branch_admin = [
     key: "salary",
     sortable: true,
     render: (value: number) => (
-      <span className="font-semibold">Rs. {value?.toLocaleString()}</span>
+      <span className="text-green-500 font-semibold">
+        {formatCurrency(value)}
+      </span>
     ),
   },
   {

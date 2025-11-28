@@ -4,21 +4,33 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import DataTable from "@/components/shared/DataTable";
 import Overlay from "@/components/shared/Overlay";
 import ReusablePopover from "@/components/shared/ReusablePopover";
+import { SalaryConfirmationModal } from "@/components/shared/salary-confirmation";
 import { Button } from "@/components/ui/button";
 import { employees_table_column_branch_admin } from "@/constant/branch-admin-contants";
 import { server_base_url } from "@/constant/server-constants";
+import { useAuth } from "@/hooks/use-auth";
 import { useFetch } from "@/hooks/use-fetch";
 import { useModalState } from "@/hooks/use-modal-state";
 import { useMutation } from "@/hooks/use-mutation";
 import { IEmployee } from "@/types";
-import { FilePenLine, Trash2, UserPlus } from "lucide-react";
-import { useState } from "react";
+import {
+  CreditCard,
+  FilePenLine,
+  History,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 const Employees = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const { toggleModal, modalState } = useModalState({
     isAddEditEmployeeModalOpen: false,
     isDeleteEmployeeModalOpen: false,
+    isSalaryPaymentModalOpen: false,
   });
 
   const [selectedEmployee, setSelectedEmployee] = useState<IEmployee | null>(
@@ -29,7 +41,7 @@ const Employees = () => {
   );
 
   const { data, error, loading, refetch } = useFetch(
-    `${server_base_url}/employees`,
+    `${server_base_url}/employees?branch_id=${user?.branch_id}&include_archived=true`,
     {
       credentials: "include",
       auto: true,
@@ -61,6 +73,21 @@ const Employees = () => {
   const employees: IEmployee[] = data?.data || [];
 
   const options = [
+    {
+      label: "Make Salary Payment",
+      icon: <CreditCard size={12} />,
+      onClick: (item: IEmployee) => {
+        setSelectedEmployee(item);
+        toggleModal("isSalaryPaymentModalOpen");
+      },
+    },
+    {
+      label: "Salary history",
+      icon: <History size={12} />,
+      onClick: (item: IEmployee) => {
+        router.push(`/branch-admin/employees/${item.id}`);
+      },
+    },
     {
       label: "Edit",
       icon: <FilePenLine size={12} />,
@@ -114,11 +141,16 @@ const Employees = () => {
     setEditingEmployee(null);
   };
 
-  // Enhanced columns with additional computed fields if needed
-  const enhancedColumns = [
-    ...employees_table_column_branch_admin,
-    // Add any additional computed columns here if needed
-  ];
+  const handleSalaryPaymentSuccess = () => {
+    refetch();
+    toggleModal("isSalaryPaymentModalOpen");
+    setSelectedEmployee(null);
+  };
+
+  const handleSalaryPaymentClose = () => {
+    toggleModal("isSalaryPaymentModalOpen");
+    setSelectedEmployee(null);
+  };
 
   if (error) {
     return (
@@ -157,7 +189,7 @@ const Employees = () => {
         selectable={false}
         defaultItemsPerPage={10}
         pagination={true}
-        columns={enhancedColumns as any}
+        columns={employees_table_column_branch_admin as any}
         rows={employees as any}
         loading={loading}
         actions={(row: any) => (
@@ -264,6 +296,13 @@ const Employees = () => {
         confirmText={deleteLoading ? "Deleting..." : "Delete Employee"}
         cancelText="Cancel"
         passwordLabel="Enter your password to confirm deletion"
+      />
+
+      <SalaryConfirmationModal
+        employee={selectedEmployee as IEmployee}
+        isOpen={modalState.isSalaryPaymentModalOpen}
+        onClose={handleSalaryPaymentClose}
+        onSuccess={handleSalaryPaymentSuccess}
       />
     </div>
   );

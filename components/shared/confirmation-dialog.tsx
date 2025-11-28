@@ -31,6 +31,7 @@ interface ConfirmationDialogProps {
   confirmationPlaceholder?: string;
   requiresPassword?: boolean;
   passwordLabel?: string;
+  disabled?: boolean;
 }
 
 export function ConfirmationDialog({
@@ -39,6 +40,7 @@ export function ConfirmationDialog({
   onConfirm,
   title,
   description,
+  disabled = false,
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "default",
@@ -59,14 +61,14 @@ export function ConfirmationDialog({
     if (requiresPassword && password.trim() === "") {
       return;
     }
-    
+
     // Pass the password to the onConfirm callback
     if (requiresPassword) {
       onConfirm(password); // Password is passed here
     } else {
       onConfirm(); // No password passed
     }
-    
+
     // Reset form
     setInputValue("");
     setPassword("");
@@ -74,7 +76,7 @@ export function ConfirmationDialog({
     onOpenChange(false);
   };
 
-  const isConfirmDisabled = 
+  const isConfirmDisabled =
     (requiresConfirmation && inputValue !== confirmationText) ||
     (requiresPassword && password.trim() === "");
 
@@ -87,11 +89,15 @@ export function ConfirmationDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-4 ">
             {description}
-            
+
             {requiresConfirmation && (
               <div className="space-y-2 mt-2">
                 <Label htmlFor="confirmation-input">
-                  Please type <span className="font-mono text-red-500">{confirmationText}</span> to confirm:
+                  Please type{" "}
+                  <span className="font-mono text-red-500">
+                    {confirmationText}
+                  </span>{" "}
+                  to confirm:
                 </Label>
                 <Input
                   id="confirmation-input"
@@ -105,7 +111,10 @@ export function ConfirmationDialog({
 
             {requiresPassword && (
               <div className="space-y-2 mt-4">
-                <Label htmlFor="password-input" className="flex items-center gap-2">
+                <Label
+                  htmlFor="password-input"
+                  className="flex items-center gap-2"
+                >
                   <Lock className="h-4 w-4" />
                   {passwordLabel}
                 </Label>
@@ -139,7 +148,7 @@ export function ConfirmationDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel 
+          <AlertDialogCancel
             onClick={() => {
               setInputValue("");
               setPassword("");
@@ -150,10 +159,10 @@ export function ConfirmationDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            disabled={isConfirmDisabled}
+            disabled={isConfirmDisabled || disabled}
             className={
-              variant === "destructive" 
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-600" 
+              variant === "destructive"
+                ? "bg-red-600 hover:bg-red-700 focus:ring-red-600"
                 : ""
             }
           >

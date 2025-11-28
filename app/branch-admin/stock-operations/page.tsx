@@ -7,6 +7,7 @@ import ReusablePopover from "@/components/shared/ReusablePopover";
 import { Button } from "@/components/ui/button";
 import { stock_movements_columns } from "@/constant/branch-admin-contants";
 import { server_base_url } from "@/constant/server-constants";
+import { useAuth } from "@/hooks/use-auth";
 import { useFetch } from "@/hooks/use-fetch";
 import { useModalState } from "@/hooks/use-modal-state";
 import { useMutation } from "@/hooks/use-mutation";
@@ -16,6 +17,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const StockOperation = () => {
+  const { user } = useAuth();
   const { toggleModal, modalState } = useModalState({
     isAddEditStockModalOpen: false,
     isDeleteStockModalOpen: false,
@@ -28,7 +30,7 @@ const StockOperation = () => {
   );
 
   const { data, error, loading, refetch } = useFetch(
-    `${server_base_url}/stocks`,
+    `${server_base_url}/stocks?branch_id=${user?.branch_id}`,
     {
       credentials: "include",
       auto: true,

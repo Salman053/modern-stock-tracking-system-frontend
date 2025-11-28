@@ -31,6 +31,18 @@ export interface IEmployee {
   created_at: string;
   updated_at: string;
 }
+export interface ISalaryPayment {
+  id: string;
+  description: string;
+  date: string;
+  user_id: string;
+  branch_id: string;
+  employee_id: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+  employee?: IEmployee;
+}
 
 export interface IUser {
   id: number;

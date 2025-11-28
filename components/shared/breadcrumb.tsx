@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +10,7 @@ function capitalize(str: string) {
 }
 
 export function Breadcrumb({ className }: { className?: string }) {
+  const router = useRouter();
   const { user } = useAuth();
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
@@ -18,7 +19,7 @@ export function Breadcrumb({ className }: { className?: string }) {
   const displaySegments = segments.slice(1); // Remove the first segment (role)
 
   // Home href based on user role
-  const homeHref = user?.role ? `/${user.role}/dashboard` : '/';
+  const homeHref = user?.role ? `/${user.role}/dashboard` : "/";
 
   return (
     <nav
@@ -35,26 +36,24 @@ export function Breadcrumb({ className }: { className?: string }) {
       >
         <Home className="h-4 w-4" />
       </Link>
-      
+
       {displaySegments.map((seg, idx) => {
-        // Reconstruct href with role prefix
-        const href = user?.role ? `/${user.role}/${displaySegments.slice(0, idx + 1).join("/")}` : `/${displaySegments.slice(0, idx + 1).join("/")}`;
         const isLast = idx === displaySegments.length - 1;
-        
+
         return (
           <div key={idx} className="flex items-center space-x-1">
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             {isLast ? (
               <span className="font-medium text-foreground">
-                {capitalize(seg.replace(/-/g, ' '))}
+                {capitalize(seg.replace(/-/g, " "))}
               </span>
             ) : (
-              <Link
-                href={href}
+              <button
+                onClick={() => router.back()}
                 className="text-muted-foreground hover:text-primary transition-colors"
               >
-                {capitalize(seg.replace(/-/g, ' '))}
-              </Link>
+                {capitalize(seg.replace(/-/g, " "))}
+              </button>
             )}
           </div>
         );
