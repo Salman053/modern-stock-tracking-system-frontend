@@ -38,7 +38,7 @@ const SupplierDues = () => {
     }
   );
 
-  console.log(data);
+  // console.log(data);
   const { mutate: deleteSupplierDue, loading: deleteLoading } = useMutation(
     `${server_base_url}/supplier-dues/${selectedSupplierDue?.id}`,
     {

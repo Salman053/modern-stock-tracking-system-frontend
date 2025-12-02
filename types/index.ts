@@ -69,6 +69,26 @@ export interface ISupplierDue {
   paid_amount?: number;
   remaining_amount?: number;
   status: 'pending' | 'partial' | 'paid' | 'overdue' | 'cancelled';
+  due_type: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+
+
+}
+
+export interface IBranchDue {
+  id: string;
+  supplier_id: number;
+  branch_id: number;
+  stock_movement_id?: number;
+  due_date: string;
+  total_amount: number;
+  supplier_name?: string;
+  branch_name?: string;
+  paid_amount?: number;
+  remaining_amount?: number;
+  status: 'pending' | 'partial' | 'paid' | 'overdue' | 'cancelled';
   due_type: 'purchase' | 'credit' | 'other';
   description?: string;
   created_at: string;

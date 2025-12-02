@@ -31,8 +31,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2,
-  Calendar,
-  FileText,
   DollarSign,
   CreditCard,
   Wallet,
@@ -48,13 +46,13 @@ import { server_base_url } from "@/constant/server-constants";
 import { toast } from "sonner";
 import { useMutation } from "@/hooks/use-mutation";
 import { useAuth } from "@/hooks/use-auth";
-import { ISupplierDue } from "@/types";
+import { IBranchDue, ISupplierDue } from "@/types";
 import { paymentSchema, PaymentSchemaType } from "@/schema/payment-schema";
 
 interface PaymentFormProps {
   mode?: "create" | "edit";
   initialData?: PaymentSchemaType & { id?: string };
-  dueData?: ISupplierDue;
+  dueData?: ISupplierDue | IBranchDue;
   onSuccess?: () => void;
 }
 
@@ -100,7 +98,7 @@ export function PaymentForm({
   const { user } = useAuth();
   const isEdit = mode === "edit";
 
-  const { loading, mutate } = useMutation(
+  const { error, loading, mutate } = useMutation(
     isEdit
       ? `${server_base_url}/due-payments/${initialData?.id}`
       : `${server_base_url}/due-payments`,
@@ -181,7 +179,6 @@ export function PaymentForm({
     setShowConfirmation(true);
   };
 
-  console.log(form.formState.errors);
   const handleConfirm = async (confirmationText?: string) => {
     if (!formData || !dueData) return;
 
@@ -191,7 +188,7 @@ export function PaymentForm({
         user_id: user?.id,
         branch_id: user?.branch_id,
         due_id: dueData.id,
-        due_type: "supplier",
+        due_type: dueData.due_type || "",
       };
 
       await mutate(payload);
@@ -225,6 +222,26 @@ export function PaymentForm({
       form.setValue("amount", Math.floor(remainingAmount / 2));
     }
   };
+
+  React.useEffect(() => {
+    // Only auto-generate in create mode
+    if (!isEdit && dueData && paymentAmount > 0) {
+      const baseDescription = `Payment of Rs. ${paymentAmount} for ${
+        dueData.supplier_id ? dueData.supplier_name : "branch"
+      }  - Due #${dueData.id}`;
+
+      if (
+        !description ||
+        description.startsWith("Payment of Rs.") ||
+        description ===
+          `Payment for ${
+            dueData.supplier_id ? dueData.supplier_name : "branch"
+          } - Due #${dueData.id}`
+      ) {
+        form.setValue("description", baseDescription);
+      }
+    }
+  }, [paymentAmount, dueData, description, form, isEdit]);
 
   return (
     <>
@@ -267,7 +284,7 @@ export function PaymentForm({
                           Total Amount:
                         </span>
                         <span className="font-bold text-lg">
-                          Rs. {Number(dueData.total_amount)}
+                          Rs. {Number(dueData.total_amount) || 0}
                         </span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
@@ -275,7 +292,7 @@ export function PaymentForm({
                           Already Paid:
                         </span>
                         <span className="font-bold text-lg text-green-600">
-                          Rs. {Number(dueData.paid_amount || "0").toFixed(2)}
+                          Rs. {Number(dueData.paid_amount || "0")}
                         </span>
                       </div>
                       <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
@@ -283,7 +300,7 @@ export function PaymentForm({
                           Remaining Amount:
                         </span>
                         <span className="font-bold text-lg text-red-600">
-                          Rs. {remainingAmount.toFixed(2)}
+                          Rs. {Number(remainingAmount) || 0}
                         </span>
                       </div>
                     </div>
@@ -338,7 +355,9 @@ export function PaymentForm({
                               </span>
                               <span
                                 className={`font-bold ${
-                                  remainingAmount - paymentAmount > 0
+                                  Math.abs(
+                                    Number(remainingAmount - paymentAmount)
+                                  ) > 0
                                     ? "text-red-600"
                                     : "text-green-600"
                                 }`}

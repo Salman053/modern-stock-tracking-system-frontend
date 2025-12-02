@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Edit, Trash } from "lucide-react";
+import { CreditCard, Edit, Trash } from "lucide-react";
 import { Button } from "../ui/button";
 
 export interface Branch {
@@ -24,6 +24,7 @@ interface BranchCardProps {
   className?: string;
   onEdit?: (branch: Branch) => void;
   onDelete?: (branch: Branch) => void;
+  onPayment?: (branch: Branch) => void;
 }
 
 export function BranchCard({
@@ -32,6 +33,7 @@ export function BranchCard({
   onEdit,
   onDelete,
   onView,
+  onPayment,
 }: BranchCardProps) {
   const getStatusVariant = (status: Branch["status"]) => {
     switch (status) {
@@ -108,23 +110,21 @@ export function BranchCard({
         </div>
 
         {/* Action Buttons */}
-        {(onEdit || onDelete) && (
+        {(onEdit || onDelete || onPayment) && (
           <div className="flex gap-2 pt-2 justify-end border-t">
             {onEdit && (
-              <Button
-              variant={"outline"}
-                onClick={() => onEdit(branch)}
-              >
-                <Edit size={18}/>
+              <Button variant={"outline"} onClick={() => onEdit(branch)}>
+                <Edit size={18} />
+              </Button>
+            )}
+            {onPayment && (
+              <Button variant={"outline"} onClick={() => onPayment(branch)}>
+                <CreditCard size={18} />
               </Button>
             )}
             {onDelete && (
-              <Button
-              variant={"destructive"}
-
-                onClick={() => onDelete(branch)}
-              >
-               <Trash/>
+              <Button variant={"destructive"} onClick={() => onDelete(branch)}>
+                <Trash />
               </Button>
             )}
           </div>

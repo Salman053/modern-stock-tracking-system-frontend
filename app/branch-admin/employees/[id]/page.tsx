@@ -121,18 +121,6 @@ const SalaryPayments = () => {
     );
   }
 
-  if (!employee) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
-        <div className="text-red-500 text-lg">Employee not found</div>
-        <Button onClick={handleBackToEmployees}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Employees
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Employee Header */}

@@ -2,7 +2,9 @@ import { formatCurrency } from "@/lib/currency-utils";
 import { IEmployee, NavItem } from "@/types";
 import {
   Box,
+  Building,
   Calendar,
+  DollarSign,
   Folders,
   LayoutDashboard,
   Package,
@@ -40,6 +42,12 @@ export const branchAdminNav: NavItem[] = [
       { title: "Manage Suppliers", href: "/branch-admin/suppliers/manage" },
       { title: "Suppliers Dues", href: "/branch-admin/suppliers/dues" },
     ],
+  },
+  {
+    title: "Branches",
+    href: "/branch-admin/branches",
+    icon: <Building className="h-5 w-5" />,
+    submenu: [{ title: "Manage Branches", href: "/branch-admin/branches" }],
   },
   {
     title: "Stock Operations",
@@ -384,5 +392,113 @@ export const products_table_column_branch_admin = [
     key: "updated_at",
     sortable: true,
     render: (value: string) => new Date(value).toLocaleDateString(),
+  },
+];
+export const branch_dues_columns = [
+  {
+    label: "ID",
+    key: "id",
+    sortable: true,
+    render: (value: string) => <span className="font-mono">#{value}</span>,
+  },
+  {
+    label: "Branch",
+    key: "branch_name",
+    sortable: true,
+  },
+
+  {
+    label: "Total",
+    key: "total_amount",
+    sortable: true,
+    render: (value: number) => (
+      <span className="font-medium">{formatCurrency(value)}</span>
+    ),
+  },
+  {
+    label: "Paid",
+    key: "paid_amount",
+    sortable: true,
+    render: (value: number) => {
+      return <span>{formatCurrency(value)}</span>;
+    },
+  },
+  {
+    label: "Remaining",
+    key: "remaining_amount",
+    sortable: true,
+    render: (value: number) => {
+      return <span>{formatCurrency(value)}</span>;
+    },
+  },
+  {
+    label: "D.Date",
+    key: "due_date",
+    sortable: true,
+    render: (value: string) => (
+      <div className="text-sm text-gray-500">
+        {value ? new Date(value).toLocaleDateString() : "N/A"}
+      </div>
+    ),
+  },
+  {
+    label: "Status",
+    key: "status",
+    sortable: true,
+    render: (value: string) => {
+      const statusColors = {
+        pending: "bg-blue-100 text-blue-800",
+        partial: "bg-yellow-100 text-yellow-800",
+        paid: "bg-green-100 text-green-800",
+        overdue: "bg-red-100 text-red-800",
+        cancelled: "bg-gray-100 text-gray-800",
+      };
+
+      const colorClass =
+        statusColors[value as keyof typeof statusColors] ||
+        "bg-gray-100 text-gray-800";
+
+      return (
+        <div
+          className={`inline-flex  items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}
+        >
+          <span className="capitalize">{value}</span>
+        </div>
+      );
+    },
+  },
+  {
+    label: "Type",
+    key: "due_type",
+    sortable: true,
+  },
+  {
+    label: "P.Name",
+    key: "product_name",
+    sortable: true,
+  },
+  {
+    label: "Created",
+    key: "created_at",
+    sortable: true,
+    render: (value: string) => (
+      <div className="text-sm text-gray-500">
+        {value ? new Date(value).toLocaleDateString() : "N/A"}
+      </div>
+    ),
+  },
+  {
+    label: "Description",
+    key: "description",
+    sortable: false,
+    render: (value: string) => (
+      <div title={value} className="max-w-xs">
+        {value ? (
+          value.slice(0, 10) + "....."
+        ) : (
+          <span className="text-gray-400">No description</span>
+        )}
+      </div>
+    ),
   },
 ];

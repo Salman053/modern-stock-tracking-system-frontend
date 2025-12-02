@@ -76,12 +76,12 @@ const MOVEMENT_TYPE_CONFIG = {
     color: "bg-green-100 text-green-800 border-green-200",
     icon: Truck,
   },
-  dispatch: {
-    label: "Stock Dispatch",
-    description: "Stock dispatched to customer or sold",
-    color: "bg-blue-100 text-blue-800 border-blue-200",
-    icon: Package,
-  },
+  // dispatch: {
+  //   label: "Stock Dispatch",
+  //   description: "Stock dispatched to customer or sold",
+  //   color: "bg-blue-100 text-blue-800 border-blue-200",
+  //   icon: Package,
+  // },
   transfer_in: {
     label: "Transfer In",
     description: "Stock received from another branch",
@@ -151,7 +151,6 @@ export function StockMovementForm({
     }
   );
 
-  
   const { data: productsData, loading: productsLoading } = useFetch(
     `${server_base_url}/products?branch_id=${user?.branch_id}`,
     {
@@ -161,7 +160,6 @@ export function StockMovementForm({
     }
   );
 
-  
   const { data: suppliersData, loading: suppliersLoading } = useFetch(
     `${server_base_url}/suppliers`,
     {
@@ -171,7 +169,6 @@ export function StockMovementForm({
     }
   );
 
-  
   const { data: branchesData, loading: branchesLoading } = useFetch(
     `${server_base_url}/branches`,
     {
@@ -181,7 +178,6 @@ export function StockMovementForm({
     }
   );
 
-  
   const getInitialProductOption = () => {
     if (!initialData?.product_id) return [];
     return [
@@ -223,7 +219,7 @@ export function StockMovementForm({
     defaultValues: initialData
       ? {
           ...initialData,
-          
+
           product_id: Number(initialData.product_id) || 0,
           supplier_id: initialData.supplier_id
             ? Number(initialData.supplier_id)
@@ -231,7 +227,7 @@ export function StockMovementForm({
           reference_branch_id: initialData.reference_branch_id
             ? Number(initialData.reference_branch_id)
             : undefined,
-          
+
           quantity: Number(initialData.quantity) || 0,
           unit_price_per_meter: Number(initialData.unit_price_per_meter) || 0,
           paid_amount: Number(initialData.paid_amount) || 0,
@@ -253,6 +249,35 @@ export function StockMovementForm({
   });
 
   const onSubmit = (data: StockMovementSchemaType) => {
+    // Validate stock availability for transfer_out and dispatch operations
+    if (
+      data.movement_type === "transfer_out" ||
+      data.movement_type === "dispatch"
+    ) {
+      const selectedProduct = (productsData?.data || []).find(
+        (product: IProduct) =>
+          product.id.toString() === data.product_id.toString()
+      );
+
+      if (selectedProduct) {
+        const availableStock = Number(selectedProduct.quantity) || 0;
+        const requestedQuantity = Number(data.quantity) || 0;
+
+        if (requestedQuantity > availableStock) {
+          toast.error("Insufficient Stock", {
+            description: `Cannot ${
+              data.movement_type === "transfer_out"
+                ? "transfer out"
+                : "dispatch"
+            } ${requestedQuantity} units. Only ${availableStock} units available in stock for "${
+              selectedProduct.name
+            }".`,
+          });
+          return;
+        }
+      }
+    }
+
     setFormData(data);
     setShowConfirmation(true);
   };
@@ -268,12 +293,11 @@ export function StockMovementForm({
         admin_password: password,
       };
 
-      
+      // Remove reference_branch_id for non-transfer operations
       if (!["transfer_in", "transfer_out"].includes(formData.movement_type)) {
         delete (payload as any).reference_branch_id;
       }
 
-      
       if (isEdit) {
         delete (payload as any).product_id;
         delete (payload as any).supplier_id;
@@ -295,13 +319,11 @@ export function StockMovementForm({
     }
   };
 
-  
   const movementType = form.watch("movement_type");
   const quantity = form.watch("quantity");
   const unitPrice = form.watch("unit_price_per_meter");
   const paidAmount = form.watch("paid_amount");
 
-  
   React.useEffect(() => {
     if (quantity && unitPrice) {
       const total = quantity * unitPrice;
@@ -309,7 +331,6 @@ export function StockMovementForm({
     }
   }, [quantity, unitPrice, form]);
 
-  
   const productOptions: Option[] = (productsData?.data || []).map(
     (product: IProduct) => ({
       label: `${product.name} (${product.company}) - Stock: ${product.quantity}`,
@@ -344,8 +365,8 @@ export function StockMovementForm({
     switch (type) {
       case "arrival":
         return "This will: • Increase product stock • Create supplier due if payment not completed • Update inventory records";
-      case "dispatch":
-        return "This will: • Decrease product stock • Update sales records • Affect available inventory";
+      // case "dispatch":
+      //   return "This will: • Decrease product stock • Update sales records • Affect available inventory";
       case "transfer_in":
         return "This will: • Increase product stock in your branch • Create inter-branch due record • Sync with sending branch";
       case "transfer_out":
@@ -411,7 +432,7 @@ export function StockMovementForm({
                               selected={getInitialProductOption().map(
                                 (opt) => opt.value
                               )}
-                              onChange={() => {}} 
+                              onChange={() => {}}
                               placeholder=""
                               isMulti={false}
                               disabled={true}
@@ -752,7 +773,6 @@ export function StockMovementForm({
                         <FormControl>
                           <Input
                             type="number"
-                            step="0.01"
                             placeholder="0.00"
                             {...field}
                             onChange={(e) =>
@@ -778,7 +798,6 @@ export function StockMovementForm({
                         <FormControl>
                           <Input
                             type="number"
-                            step="0.01"
                             placeholder="0.00"
                             {...field}
                             onChange={(e) =>
@@ -805,7 +824,6 @@ export function StockMovementForm({
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
                           placeholder="0.00"
                           {...field}
                           readOnly
@@ -829,15 +847,15 @@ export function StockMovementForm({
                       </span>
                       <Badge
                         variant={
-                          form.watch("total_amount") -
-                            (form.watch("paid_amount") || 0) >
+                          Number(form.watch("total_amount")) -
+                            (Number(form.watch("paid_amount")) || 0) >
                           0
                             ? "outline"
                             : "default"
                         }
                         className={
-                          form.watch("total_amount") -
-                            (form.watch("paid_amount") || 0) >
+                          Number(form.watch("total_amount")) -
+                            (Number(form.watch("paid_amount")) || 0) >
                           0
                             ? "bg-amber-100 text-amber-800"
                             : "bg-green-100 text-green-800"
@@ -845,14 +863,14 @@ export function StockMovementForm({
                       >
                         Rs.{" "}
                         {(
-                          form.watch("total_amount") -
-                          (form.watch("paid_amount") || 0)
+                          Number(form.watch("total_amount")) -
+                          (Number(form.watch("paid_amount")) || 0)
                         ).toFixed(2)}
                       </Badge>
                     </div>
                     <p className="text-xs text-blue-700 mt-1">
-                      {form.watch("total_amount") -
-                        (form.watch("paid_amount") || 0) >
+                      {Number(form.watch("total_amount")) -
+                        (Number(form.watch("paid_amount")) || 0) >
                       0
                         ? "This amount will be recorded as due"
                         : "Full payment completed"}
@@ -971,7 +989,6 @@ export function StockMovementForm({
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         open={showConfirmation}
-        
         onOpenChange={setShowConfirmation}
         onConfirm={(password: any) => handleConfirm(password)}
         title={
@@ -1050,7 +1067,7 @@ export function StockMovementForm({
                 </div>
               </div>
 
-                  {/* {isEdit && (
+              {/* {isEdit && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                       <h4 className="text-sm font-medium text-yellow-800 mb-2">
                         Edit Mode Restrictions:
@@ -1064,26 +1081,26 @@ export function StockMovementForm({
                     </div>
                   )} */}
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">
-                    Database Actions:
-                  </h4>
-                  <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
-                    {formData.auto_update_product && (
-                      <li>Update product stock quantity in inventory</li>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <h4 className="text-sm font-medium text-blue-800 mb-2">
+                  Database Actions:
+                </h4>
+                <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                  {formData.auto_update_product && (
+                    <li>Update product stock quantity in inventory</li>
+                  )}
+                  {formData.movement_type === "arrival" &&
+                    formData.supplier_id && (
+                      <li>Create supplier due record for remaining amount</li>
                     )}
-                    {formData.movement_type === "arrival" &&
-                      formData.supplier_id && (
-                        <li>Create supplier due record for remaining amount</li>
-                      )}
-                    {(formData.movement_type === "transfer_in" ||
-                      formData.movement_type === "transfer_out") && (
-                      <li>Create inter-branch due record</li>
-                    )}
-                    <li>Record complete transaction history</li>
-                    <li>Update financial records and balances</li>
-                  </ul>
-                </div>
+                  {(formData.movement_type === "transfer_in" ||
+                    formData.movement_type === "transfer_out") && (
+                    <li>Create inter-branch due record</li>
+                  )}
+                  <li>Record complete transaction history</li>
+                  <li>Update financial records and balances</li>
+                </ul>
+              </div>
 
               <p className="text-sm text-muted-foreground">
                 {isEdit

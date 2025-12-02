@@ -43,13 +43,15 @@ const StockOperation = () => {
       credentials: "include",
       method: "DELETE",
       onError: (error: any) => {
+        console.log(error, "Delete Failed");
         toast.error("Delete Failed", {
           description:
             error?.message ||
             "Failed to delete stock movement. Please try again.",
         });
       },
-      onSuccess: () => {
+      onSuccess: (s) => {
+        console.log(s, "Stock movement cancelled successfully");
         toast.success("Stock Movement Cancelled Successfully", {
           description: `Stock movement has been cancelled successfully.`,
         });
@@ -67,6 +69,12 @@ const StockOperation = () => {
       label: "Edit",
       icon: <FilePenLine size={16} />,
       onClick: (item: IStockMovement) => {
+        if (item.status === "cancelled") {
+          toast.error("Stock Movement is Cancelled", {
+            description: `Stock movement is cancelled you dont have permission to edit it.`,
+          });
+          return;
+        }
         setEditingMovement(item);
         toggleModal("isAddEditStockModalOpen");
       },
@@ -74,6 +82,12 @@ const StockOperation = () => {
     {
       label: "Cancel",
       onClick: (item: IStockMovement) => {
+        if (item.status === "cancelled") {
+          toast.error("Stock Movement is Cancelled", {
+            description: `Stock movement is cancelled you dont have permission to cancel it.`,
+          });
+          return;
+        }
         setSelectedMovement(item);
         toggleModal("isDeleteStockModalOpen");
         toast.warning(
