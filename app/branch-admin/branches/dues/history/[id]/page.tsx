@@ -20,25 +20,14 @@ import {
   Wallet,
   RefreshCw,
   Edit,
+  Plus,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Overlay from "@/components/shared/Overlay";
 import { PaymentForm } from "@/components/shared/payment-form";
-
-interface IDuePayment {
-  id: string;
-  description: string;
-  payment_date: string;
-  user_id: string;
-  branch_id: string;
-  due_type: string;
-  due_id: string;
-  amount: number;
-  payment_method: string;
-  created_at: string;
-}
+import { IDuePayments } from "@/types";
 
 const PAYMENT_METHOD_CONFIG = {
   cash: {
@@ -65,33 +54,38 @@ const PAYMENT_METHOD_CONFIG = {
 
 const DuePaymentHistory = () => {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const due_id = searchParams.get("due_id");
   const { toggleModal, modalState } = useModalState({
     isDeletePaymentModalOpen: false,
-    isEditPaymentModalOpen: false,
+    isAddEditPaymentModalOpen: false,
   });
 
-  const [selectedPayment, setSelectedPayment] = useState<IDuePayment | null>(
+  const [selectedPayment, setSelectedPayment] = useState<IDuePayments | null>(
     null
   );
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   const { data, error, loading, refetch } = useFetch(
-    `${server_base_url}/due-payments/?due_id=${id}`,
+    `${server_base_url}/due-payments/?due_id=${due_id}`,
     {
       credentials: "include",
       auto: true,
     }
   );
+  console.log(data);
   const {
-    data: supplier_due,
+    data: branch_dues,
     error: supplier_due_error,
     loading: supplier_due_loading,
     refetch: supplier_due_refetch,
-  } = useFetch(`${server_base_url}/supplier-dues/${id}`, {
+  } = useFetch(`${server_base_url}/branch-dues/${id}/by-stock-movement`, {
     credentials: "include",
     auto: true,
   });
 
-  // console.log(supplier_due);
+  // console.log(branch_dues);
+
   const { mutate: deletePayment, loading: deleteLoading } = useMutation(
     `${server_base_url}/due-payments/${selectedPayment?.id}`,
     {
@@ -111,11 +105,12 @@ const DuePaymentHistory = () => {
         toggleModal("isDeletePaymentModalOpen");
         setSelectedPayment(null);
         refetch();
+        supplier_due_refetch(); // Also refresh due data
       },
     }
   );
 
-  const payments: IDuePayment[] = data?.data || [];
+  const payments: IDuePayments[] = data?.data || [];
 
   const getPaymentMethodBadge = (method: string) => {
     const config = PAYMENT_METHOD_CONFIG[
@@ -160,6 +155,42 @@ const DuePaymentHistory = () => {
         {config.label}
       </Badge>
     );
+  };
+
+  const handleAddNewPayment = () => {
+    setSelectedPayment(null);
+    setIsCreatingNew(true);
+    toggleModal("isAddEditPaymentModalOpen");
+  };
+
+  const handleEditPayment = (payment: IDuePayments) => {
+    setSelectedPayment(payment);
+    setIsCreatingNew(false);
+    toggleModal("isAddEditPaymentModalOpen");
+    toast.info("Editing payment record", {
+      description: "Please review and update the payment details.",
+    });
+  };
+
+  const handlePaymentSuccess = () => {
+    toggleModal("isAddEditPaymentModalOpen");
+    setSelectedPayment(null);
+    setIsCreatingNew(false);
+    refetch();
+    supplier_due_refetch(); // Refresh due data to get updated amounts
+    toast.success(
+      isCreatingNew
+        ? "Payment created successfully"
+        : "Payment updated successfully"
+    );
+  };
+
+  const handleDeletePayment = (payment: IDuePayments) => {
+    setSelectedPayment(payment);
+    toggleModal("isDeletePaymentModalOpen");
+    toast.warning("Delete Confirmation Required", {
+      description: "Please carefully review before deleting this payment.",
+    });
   };
 
   const columns = [
@@ -208,14 +239,6 @@ const DuePaymentHistory = () => {
       render: (value: string) => getDueTypeBadge(value),
     },
     {
-      label: "Due ID",
-      key: "due_id",
-      sortable: true,
-      render: (value: string) => (
-        <span className="font-mono text-xs text-gray-600">#{value}</span>
-      ),
-    },
-    {
       label: "Payment Date",
       key: "payment_date",
       sortable: true,
@@ -238,31 +261,6 @@ const DuePaymentHistory = () => {
     },
   ];
 
-  const options = [
-    {
-      label: "Edit",
-      onClick: (item: IDuePayment) => {
-        setSelectedPayment(item);
-        toggleModal("isEditPaymentModalOpen");
-        toast.warning(
-          "Please carefully read the instructions before doing action"
-        );
-      },
-      icon: <Edit size={16} />,
-    },
-    {
-      label: "Delete",
-      onClick: (item: IDuePayment) => {
-        setSelectedPayment(item);
-        toggleModal("isDeletePaymentModalOpen");
-        toast.warning(
-          "Please carefully read the instructions before doing action"
-        );
-      },
-      icon: <Trash2 size={16} />,
-    },
-  ];
-
   const handleDeleteConfirm = async (password: string) => {
     if (!selectedPayment || !password) return;
 
@@ -280,20 +278,19 @@ const DuePaymentHistory = () => {
     }
   };
 
-  // Calculate summary statistics
-  const totalPayments = payments.reduce(
-    (sum, payment) => sum + Number(payment.amount),
-    0
-  );
-  const cashPayments = payments.filter(
-    (p) => p.payment_method === "cash"
-  ).length;
-  const bankTransfers = payments.filter(
-    (p) => p.payment_method === "bank_transfer"
-  ).length;
-  const digitalWallets = payments.filter(
-    (p) => p.payment_method === "digital_wallet"
-  ).length;
+  const options = [
+    {
+      label: "Edit",
+      onClick: (row: IDuePayments) => handleEditPayment(row),
+      icon: <Edit size={16} />,
+    },
+    {
+      label: "Delete",
+      onClick: (row: IDuePayments) => handleDeletePayment(row),
+      icon: <Trash2 size={16} />,
+      variant: "destructive" as const,
+    },
+  ];
 
   if (error) {
     return (
@@ -311,7 +308,7 @@ const DuePaymentHistory = () => {
 
   return (
     <div>
-      <div className="flex justify-between mb-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="page-heading">Due Payment History</h2>
           <p className="page-description">
@@ -323,81 +320,59 @@ const DuePaymentHistory = () => {
               } recorded`}
           </p>
         </div>
-        <Button onClick={() => refetch()} variant="outline" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+
+        <div className="flex gap-2">
+          <Button
+            onClick={handleAddNewPayment}
+            className="gap-2 bg-green-600 hover:bg-green-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add New Payment
+          </Button>
+          <Button
+            onClick={() => {
+              refetch();
+              supplier_due_refetch();
+              toast.info("Data refreshed successfully");
+            }}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
-
-      {/* Summary Cards */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700 font-medium">
-                Total Payments
-              </p>
-              <p className="text-2xl font-bold text-green-800">
-                Rs. {totalPayments.toFixed(2)}
-              </p>
-            </div>
-            <DollarSign className="h-8 w-8 text-green-600" />
+      {payments.length === 0 && !loading ? (
+        <div className="flex flex-col items-center justify-center min-h-64 space-y-6 p-8 border-2 border-dashed border-gray-300 rounded-lg">
+          <div className="p-4 bg-blue-50 rounded-full">
+            <CreditCard className="h-12 w-12 text-blue-500" />
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              No Payment Records Found
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-md">
+              There are no payment transactions recorded for this due yet. Add
+              the first payment to start tracking payments.
+            </p>
+            <Button onClick={handleAddNewPayment} className="gap-2" size="lg">
+              <Plus className="h-5 w-5" />
+              Add First Payment
+            </Button>
           </div>
         </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-700 font-medium">Cash Payments</p>
-              <p className="text-2xl font-bold text-blue-800">{cashPayments}</p>
-            </div>
-            <Banknote className="h-8 w-8 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-700 font-medium">
-                Bank Transfers
-              </p>
-              <p className="text-2xl font-bold text-purple-800">
-                {bankTransfers}
-              </p>
-            </div>
-            <CreditCard className="h-8 w-8 text-purple-600" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-orange-700 font-medium">
-                Digital Wallets
-              </p>
-              <p className="text-2xl font-bold text-orange-800">
-                {digitalWallets}
-              </p>
-            </div>
-            <Smartphone className="h-8 w-8 text-orange-600" />
-          </div>
-        </div>
-      </div> */}
-
-      <DataTable
-        selectable={false}
-        defaultItemsPerPage={10}
-        pagination={true}
-        columns={columns as any}
-        rows={payments as any}
-        loading={loading}
-        actions={(row: any) => (
-          <div className="flex gap-2 justify-center">
-            <ReusablePopover actions={options as any} rowData={row} />
-          </div>
-        )}
-      />
-
+      ) : (
+        <DataTable
+          selectable={false}
+          defaultItemsPerPage={10}
+          pagination={true}
+          columns={columns as any}
+          rows={payments as any}
+          actions={(row) => <ReusablePopover actions={options} rowData={row} />}
+          loading={loading}
+        />
+      )}
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
         requiresPassword
@@ -499,15 +474,40 @@ const DuePaymentHistory = () => {
         cancelText="Cancel"
         passwordLabel="Enter your password to confirm deletion"
       />
+      {/* Add/Edit Payment Modal */}
       <Overlay
-        isOpen={modalState.isEditPaymentModalOpen}
-        onClose={() => toggleModal("isEditPaymentModalOpen")}
+        isOpen={modalState.isAddEditPaymentModalOpen}
+        onClose={() => {
+          toggleModal("isAddEditPaymentModalOpen");
+          setSelectedPayment(null);
+          setIsCreatingNew(false);
+        }}
       >
-        <PaymentForm
-          dueData={supplier_due?.data as any}
-          mode="edit"
-          initialData={selectedPayment as any}
-        />
+        <div className="p-1">
+          <PaymentForm
+            dueData={{
+              ...branch_dues?.data,
+              due_type: "branch",
+              id: due_id || id,
+              total_amount: branch_dues?.data?.total_amount || 0,
+              paid_amount: branch_dues?.data?.paid_amount || 0,
+              remaining_amount:
+                branch_dues?.data?.remaining_amount ||
+                Number(branch_dues?.data?.total_amount || 0) -
+                  Number(branch_dues?.data?.paid_amount || 0),
+            }}
+            mode={isCreatingNew ? "create" : "edit"}
+            initialData={
+              selectedPayment
+                ? {
+                    ...selectedPayment,
+                    amount: Number(selectedPayment?.amount),
+                  }
+                : (null as any)
+            }
+            onSuccess={handlePaymentSuccess}
+          />
+        </div>
       </Overlay>
     </div>
   );

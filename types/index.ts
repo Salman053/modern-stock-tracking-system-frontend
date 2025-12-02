@@ -44,6 +44,20 @@ export interface ISalaryPayment {
   employee?: IEmployee;
 }
 
+export interface IDuePayments {
+  id: number;
+  description: string | null;
+  payment_date: string;
+  user_id: number;
+  branch_id: number;
+  due_type: "payable" | "receivable";
+  due_id: number;
+  amount: number; payment_method: "cash" | "card" | "bank" | "mobile" | string;
+  created_at: string;
+  updated_at: string;
+}
+
+
 export interface IUser {
   id: number;
   username: string;

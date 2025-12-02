@@ -1,34 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { IBranchDue } from "@/types";
 import { useFetch } from "@/hooks/use-fetch";
 import { server_base_url } from "@/constant/server-constants";
 import Overlay from "@/components/shared/Overlay";
-import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import ReusablePopover from "@/components/shared/ReusablePopover";
 import DataTable from "@/components/shared/DataTable";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useModalState } from "@/hooks/use-modal-state";
-import { useMutation } from "@/hooks/use-mutation";
-import { toast } from "sonner";
-import {
-  Calendar,
-  CreditCard,
-  DollarSign,
-  FilePenLine,
-  History,
-  Trash2,
-  TrendingUp,
-  UserPlus,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Percent,
-} from "lucide-react";
+import { CreditCard, History } from "lucide-react";
 import { PaymentForm } from "@/components/shared/payment-form";
 import { branch_dues_columns } from "@/constant/branch-admin-contants";
 
@@ -74,7 +56,9 @@ const BranchDues = () => {
       label: "Payment History",
       icon: <History size={12} />,
       onClick: (item: IBranchDue) => {
-        router.push(`/branch-admin/branches/dues/history/${item.id}`);
+        router.push(
+          `/branch-admin/branches/dues/history/${item.stock_movement_id}/?due_id=${item.id}`
+        );
       },
     },
   ];
