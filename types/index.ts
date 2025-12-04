@@ -44,6 +44,57 @@ export interface ISalaryPayment {
   employee?: IEmployee;
 }
 
+export interface ICustomer {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email?: string;
+  cnic: string;
+  user_id: string;
+  branch_id: string;
+  is_regular: boolean;
+  status: 'active' | 'inactive' | 'archived';
+  created_at: string;
+  updated_at?: string;
+  created_by?: string;
+  branch_name?: string;
+}
+
+export interface SaleItem {
+  id: number;
+  product_id: number;
+  quantity: number;
+  unit_price: number;
+  updated_at?: string;
+  created_by?: string;
+  total?: number;
+}
+
+export enum SaleStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export interface Sale {
+  id: string | number;
+  user_id: string | number;
+  branch_id: string | number;
+  customer_id: string | number;
+  sale_date: Date;
+  total_amount: number;
+  paid_amount: number;
+  discount: number;
+  profit: number;
+  note?: string;
+  is_fully_paid: boolean;
+  status: SaleStatus | string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+
 export interface IDuePayments {
   id: number;
   description: string | null;

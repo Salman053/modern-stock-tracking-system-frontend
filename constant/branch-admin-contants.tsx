@@ -50,6 +50,15 @@ export const branchAdminNav: NavItem[] = [
     submenu: [{ title: "Manage Branches", href: "/branch-admin/branches" }],
   },
   {
+    title: "Customers",
+    href: "/branch-admin/customers",
+    icon: <Building className="h-5 w-5" />,
+    // submenu: [
+    // { title: "Manage Customers", href: "/branch-admin/customers" },
+    // { title: "Add Customer", href: "/branch-admin/customers/add" },
+    // ],
+  },
+  {
     title: "Stock Operations",
     href: "/branch-admin/stock-operations",
     icon: <Truck className="h-5 w-5" />,
@@ -500,5 +509,43 @@ export const branch_dues_columns = [
         )}
       </div>
     ),
+  },
+];
+
+// In your constants file
+export const customers_table_column_branch_admin = [
+  {
+    label: "ID",
+    key: "id",
+    sortable: true,
+  },
+  {
+    label: "Name",
+    key: "name",
+    sortable: true,
+  },
+  {
+    label: "Phone",
+    key: "phone",
+    sortable: false,
+  },
+  {
+    label: "Address",
+    key: "address",
+    sortable: false,
+    render: (value: string) => (
+      <span className="max-w-[200px] truncate inline-block" title={value}>
+        {value}
+      </span>
+    ),
+  },
+  {
+    label: "Created At",
+    key: "created_at",
+    sortable: true,
+    render: (value: string) => {
+      const date = new Date(value);
+      return date.toLocaleDateString();
+    },
   },
 ];

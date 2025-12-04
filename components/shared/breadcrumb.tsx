@@ -15,10 +15,10 @@ export function Breadcrumb({ className }: { className?: string }) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
 
-  // Remove role from segments for display
-  const displaySegments = segments.slice(1); // Remove the first segment (role)
+  
+  const displaySegments = segments.slice(1); 
 
-  // Home href based on user role
+  
   const homeHref = user?.role ? `/${user.role}/dashboard` : "/";
 
   return (

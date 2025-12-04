@@ -2,18 +2,16 @@
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import Header from "@/components/shared/header";
 import ProfessionalSidebar from "@/components/shared/professional-sidebar";
-import { branchAdminNav } from "@/constant/branch-admin-contants";
+import { SalesAdminNav } from "@/constant/sales-admin-constants";
 import { server_base_url } from "@/constant/server-constants";
-import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@/hooks/use-mutation";
 import { toast } from "sonner";
 
-export default function BranchAdminLayout({
+export default function SalesManagerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
   const {
     mutate,
     loading: logoutLoading,
@@ -22,10 +20,14 @@ export default function BranchAdminLayout({
     credentials: "include",
   });
 
+  if (logoutLoading) {
+    return <div>Logout is Process</div>;
+  }
+
   return (
     <div className="min-h-screen overflow-hidden max-h-screen flex max-w-[100vw] bg-gray-50 dark:bg-gray-950">
       {/* Sidebar */}
-      <ProfessionalSidebar nav={branchAdminNav} />
+      <ProfessionalSidebar nav={SalesAdminNav} />
 
       {/* Main Content Area */}
       <div className="flex-1  overflow-hidden flex flex-col min-w-0 ">

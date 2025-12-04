@@ -82,25 +82,25 @@ const SupplierDues = () => {
         router.push(`/branch-admin/suppliers/dues/history/${item.id}`);
       },
     },
-    {
-      label: "Edit",
-      icon: <FilePenLine size={12} />,
-      onClick: (item: ISupplierDue) => {
-        setEditingSupplierDue(item);
-        toggleModal("isAddEditSupplierDueModalOpen");
-      },
-    },
-    {
-      label: "Delete",
-      onClick: (item: ISupplierDue) => {
-        setSelectedSupplierDue(item);
-        toggleModal("isDeleteSupplierDueModalOpen");
-        toast.warning(
-          "Please carefully read the instructions before doing action"
-        );
-      },
-      icon: <Trash2 size={16} />,
-    },
+    // {
+    //   label: "Edit",
+    //   icon: <FilePenLine size={12} />,
+    //   onClick: (item: ISupplierDue) => {
+    //     setEditingSupplierDue(item);
+    //     toggleModal("isAddEditSupplierDueModalOpen");
+    //   },
+    // },
+    // {
+    //   label: "Delete",
+    //   onClick: (item: ISupplierDue) => {
+    //     setSelectedSupplierDue(item);
+    //     toggleModal("isDeleteSupplierDueModalOpen");
+    //     toast.warning(
+    //       "Please carefully read the instructions before doing action"
+    //     );
+    //   },
+    //   icon: <Trash2 size={16} />,
+    // },
   ];
 
   const handleAddSupplierDue = () => {

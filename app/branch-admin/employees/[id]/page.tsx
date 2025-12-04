@@ -121,6 +121,10 @@ const SalaryPayments = () => {
     );
   }
 
+  if (!employee) {
+    return <div>Opps like there is something wrong</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Employee Header */}
