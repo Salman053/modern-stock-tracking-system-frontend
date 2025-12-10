@@ -1,5 +1,5 @@
 import { NavItem } from "@/types";
-import { LayoutDashboard, Package, Shirt, Users } from "lucide-react";
+import { CirclePercent, LayoutDashboard, Package, Shirt, Users } from "lucide-react";
 
 export const SalesAdminNav: NavItem[] = [
   {
@@ -24,7 +24,7 @@ export const SalesAdminNav: NavItem[] = [
   {
     title: "Sales",
     href: "/sales-manager/sales/manage",
-    icon: <Users className="h-5 w-5" />,
+    icon: <CirclePercent className="h-5 w-5" />,
     submenu: [
       { title: "Manage", href: "/sales-manager/sales/manage" },
       { title: "Create", href: "/sales-manager/sales/create" },

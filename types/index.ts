@@ -73,6 +73,7 @@ export interface SaleItem {
 
 export enum SaleStatus {
   PENDING = 'pending',
+  ACTIVE = "active",
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }

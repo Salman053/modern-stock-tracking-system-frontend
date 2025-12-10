@@ -39,7 +39,7 @@ export function useMutation<TData = any, TVariables = any>(
     onSettled, 
     optimisticUpdate, 
     rollbackOptimisticUpdate,
-    minLoadingDuration = 400, // Default 400ms for better UX
+    minLoadingDuration = 400, 
     ...fetchOptions 
   } = options;
 
@@ -56,7 +56,7 @@ export function useMutation<TData = any, TVariables = any>(
         setError(null);
         setData(null);
 
-        // Optimistic UI update (optional)
+        // Optimistic update
         if (optimisticUpdate && variables) {
           optimisticUpdate(variables);
         }
@@ -68,24 +68,37 @@ export function useMutation<TData = any, TVariables = any>(
             "Content-Type": "application/json",
             ...(fetchOptions.headers || {}),
           },
-          credentials: "include", // Important for cookies/sessions
+          credentials: "include", 
           body: variables ? JSON.stringify(variables) : fetchOptions.body,
         });
 
         let responseData;
-        console.log(responseData);
+        const responseText = await res.text(); // Read response as text first
         
         try {
-          responseData = await res.json();
+          // Try to parse as JSON
+          responseData = responseText ? JSON.parse(responseText) : null;
         } catch (parseError) {
-          throw new Error("Invalid JSON response from server");
+          console.error("JSON Parse Error:", parseError);
+          console.error("Response Text:", responseText);
+          
+          const elapsed = Date.now() - loadingStartTimeRef.current;
+          const remainingTime = Math.max(0, minLoadingDuration - elapsed);
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+          
+          // Rollback optimistic update
+          if (rollbackOptimisticUpdate && variables) {
+            rollbackOptimisticUpdate(variables);
+          }
+          
+          throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
         }
 
-        // Calculate remaining time to meet minimum loading duration
+        // Calculate remaining time for minimum loading duration
         const elapsed = Date.now() - loadingStartTimeRef.current;
         const remainingTime = Math.max(0, minLoadingDuration - elapsed);
 
-        // Handle server error responses (success: false)
+        // Handle error responses
         if (!res.ok || (responseData && responseData.success === false)) {
           const serverError: ServerError = {
             success: false,
@@ -95,10 +108,10 @@ export function useMutation<TData = any, TVariables = any>(
             timestamp: responseData?.timestamp
           };
 
-          // Wait for minimum loading duration before updating state
+          // Wait for remaining minimum loading time
           await new Promise(resolve => setTimeout(resolve, remainingTime));
 
-          // Rollback optimistic update if provided
+          // Rollback optimistic update
           if (rollbackOptimisticUpdate && variables) {
             rollbackOptimisticUpdate(variables);
           }
@@ -108,9 +121,9 @@ export function useMutation<TData = any, TVariables = any>(
           return;
         }
 
-        // Handle success response
+        // Handle successful response
         if (responseData && responseData.success === true) {
-          // Wait for minimum loading duration before updating state
+          // Wait for remaining minimum loading time
           await new Promise(resolve => setTimeout(resolve, remainingTime));
           
           setData(responseData);
@@ -123,7 +136,7 @@ export function useMutation<TData = any, TVariables = any>(
             errors: ["Server response missing success flag"]
           };
           
-          // Wait for minimum loading duration before updating state
+          // Wait for remaining minimum loading time
           await new Promise(resolve => setTimeout(resolve, remainingTime));
           
           setError(formatError);
@@ -133,14 +146,14 @@ export function useMutation<TData = any, TVariables = any>(
       } catch (err: any) {
         const errorObj: Error = err instanceof Error ? err : new Error(err?.message || "Network request failed");
         
-        // Calculate remaining time to meet minimum loading duration
+        // Calculate remaining time
         const elapsed = Date.now() - loadingStartTimeRef.current;
         const remainingTime = Math.max(0, minLoadingDuration - elapsed);
         
-        // Wait for minimum loading duration before updating state
+        // Wait for remaining minimum loading time
         await new Promise(resolve => setTimeout(resolve, remainingTime));
 
-        // Rollback optimistic update if provided
+        // Rollback optimistic update
         if (rollbackOptimisticUpdate && variables) {
           rollbackOptimisticUpdate(variables);
         }
