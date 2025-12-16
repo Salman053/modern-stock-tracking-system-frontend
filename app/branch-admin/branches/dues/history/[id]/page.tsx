@@ -73,7 +73,7 @@ const DuePaymentHistory = () => {
       auto: true,
     }
   );
-  console.log(data);
+  // console.log(data);
   const {
     data: branch_dues,
     error: supplier_due_error,

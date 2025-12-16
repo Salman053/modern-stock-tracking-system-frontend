@@ -198,3 +198,27 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  .space-y-6>*+* {
+    margin-top: 1rem !important;
+  }
+}

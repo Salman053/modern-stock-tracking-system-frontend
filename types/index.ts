@@ -61,15 +61,7 @@ export interface ICustomer {
   branch_name?: string;
 }
 
-export interface SaleItem {
-  id: number;
-  product_id: number;
-  quantity: number;
-  unit_price: number;
-  updated_at?: string;
-  created_by?: string;
-  total?: number;
-}
+
 
 export enum SaleStatus {
   PENDING = 'pending',
@@ -78,21 +70,43 @@ export enum SaleStatus {
   CANCELLED = 'cancelled',
 }
 
+
+export interface SaleItem {
+  id: number;
+  sale_id: number;
+  product_id: number;
+  user_id: number;
+  branch_id: number;
+  quantity: number;
+  unit_price: number;
+  total: number;
+  created_at: string;
+  updated_at: string;
+  product_name: string;
+  available_stock: number;
+}
+
+
 export interface Sale {
-  id: string | number;
-  user_id: string | number;
-  branch_id: string | number;
-  customer_id: string | number;
-  sale_date: Date;
+  id: number;
+  user_id: number;
+  branch_id: number;
+  customer_id: number;
+  sale_date: string;
   total_amount: number;
   paid_amount: number;
   discount: number;
   profit: number;
-  note?: string;
-  is_fully_paid: boolean;
-  status: SaleStatus | string;
-  created_at: Date;
-  updated_at: Date;
+  note: string;
+  is_fully_paid: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  branch_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
 }
 
 
@@ -223,4 +237,18 @@ export interface IProduct {
   created_at: string;
   updated_at: string;
   profit_margin?: number;
+}
+export interface CustomerDue {
+    id: number;
+    branch_id: number;
+    sales_id: number;
+    due_date: string;
+    total_amount: string;
+    paid_amount: string;
+    remaining_amount: string;
+    status: 'pending' | 'partially_paid' | 'paid' | 'overdue';
+    due_type: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
 }

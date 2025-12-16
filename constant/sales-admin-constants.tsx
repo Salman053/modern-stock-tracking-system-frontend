@@ -1,4 +1,5 @@
 import { NavItem } from "@/types";
+import { format } from "date-fns";
 import { CirclePercent, LayoutDashboard, Package, Shirt, Users } from "lucide-react";
 
 export const SalesAdminNav: NavItem[] = [
@@ -31,3 +32,86 @@ export const SalesAdminNav: NavItem[] = [
     ],
   },
 ];
+
+
+
+
+
+ export  const salesColumns = [
+    {
+      label: "Sale ID",
+      key: "id",
+      sortable: true,
+      render: (value: number) => (
+        <span className="font-mono font-medium">#{value}</span>
+      ),
+    },
+    {
+      label: "Date",
+      key: "sale_date",
+      sortable: true,
+      render: (value: string) => (
+        <span>{format(new Date(value), "dd MMM yyyy")}</span>
+      ),
+    },
+    {
+      label: "Customer",
+      key: "customer_name",
+      sortable: true,
+
+    },
+    {
+      label: "Amount",
+      key: "total_amount",
+      sortable: true,
+      render: (value: number) => (
+
+        <span className="font-bold">Rs. {value.toLocaleString()}</span>
+
+      ),
+    },
+    {
+      label: "Paid/Total",
+      key: "paid_amount",
+      sortable: true,
+
+
+    },
+    {
+      label: "Profit",
+      key: "profit",
+      sortable: true,
+      render: (value: number) => {
+        const color = value >= 0 ? "text-green-600" : "text-red-600";
+        return (
+          <span className={`font-medium ${color}`}>
+            Rs. {value.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      label: "Status",
+      key: "status",
+      sortable: true,
+
+    },
+    {
+      label: "Created By",
+      key: "created_by",
+      sortable: true,
+      render: (value: string) => (
+          <span className="text-sm">{value}</span>
+      ),
+    },
+    {
+      label: "Created At",
+      key: "created_at",
+      sortable: true,
+      render: (value: string) => (
+        <span className="text-xs text-muted-foreground">
+          {format(new Date(value), "dd MMM yyyy, HH:mm")}
+        </span>
+      ),
+    },
+  ];

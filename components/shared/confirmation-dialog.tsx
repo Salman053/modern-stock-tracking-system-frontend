@@ -20,7 +20,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 interface ConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (password?: string) => void; // Updated to accept password
+  onConfirm: (password?: string) => any;
   title: string;
   description: React.ReactNode;
   confirmText?: string;

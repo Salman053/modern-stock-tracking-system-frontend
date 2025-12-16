@@ -98,7 +98,7 @@ export function PaymentForm({
   const { user } = useAuth();
   const isEdit = mode === "edit";
 
-  const { error, loading, mutate } = useMutation(
+  const { data,error, loading, mutate } = useMutation(
     isEdit
       ? `${server_base_url}/due-payments/${initialData?.id}`
       : `${server_base_url}/due-payments`,
@@ -133,6 +133,8 @@ export function PaymentForm({
       },
     }
   );
+
+  // console.log(data)
 
   const remainingAmount = dueData
     ? Number(dueData.remaining_amount) ||
@@ -306,7 +308,7 @@ export function PaymentForm({
                     </div>
 
                     {/* Quick Action Buttons */}
-                    <div className="space-y-3">
+                    <div className={`space-y-3 ${mode === "edit" && "hidden"}`}>
                       <p className="text-sm font-medium text-gray-600">
                         Quick Amount:
                       </p>

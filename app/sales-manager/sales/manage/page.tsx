@@ -16,6 +16,8 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { salesColumns } from "@/constant/sales-admin-constants";
+import { useRouter } from "next/navigation";
 
 const Sales = () => {
   const { toggleModal, modalState } = useModalState({
@@ -23,9 +25,8 @@ const Sales = () => {
     isViewSaleModalOpen: false,
     isCancelSaleModalOpen: false,
   });
-
+  const { push } = useRouter()
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-  // const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [viewingSale, setViewingSale] = useState<Sale | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -96,8 +97,8 @@ const Sales = () => {
       label: "View Details",
       icon: <Eye size={12} />,
       onClick: (sale: Sale) => {
-        setViewingSale(sale);
-        toggleModal("isViewSaleModalOpen");
+        push(`/sales-manager/sales/manage/${sale.id}`)
+        toast.info(`View sales ${sale.id}`)
       },
     },
     // {
@@ -161,100 +162,6 @@ const Sales = () => {
     }
   };
 
-  const columns = [
-    {
-      label: "Sale ID",
-      key: "id",
-      sortable: true,
-      render: (value: number) => (
-        <span className="font-mono font-medium">#{value}</span>
-      ),
-    },
-    {
-      label: "Date",
-      key: "sale_date",
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="h-3 w-3 text-muted-foreground" />
-          <span>{format(new Date(value), "dd MMM yyyy")}</span>
-        </div>
-      ),
-    },
-    {
-      label: "Customer",
-      key: "customer_name",
-      sortable: true,
-      render: (value: string, row: Sale) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <User className="h-3 w-3 text-muted-foreground" />
-            <span className="font-medium">{value || "Walk-in Customer"}</span>
-          </div>
-          {row?.customer_phone && (
-            <p className="text-xs text-muted-foreground">{row?.customer_phone}</p>
-          )}
-        </div>
-      ),
-    },
-    {
-      label: "Amount",
-      key: "total_amount",
-      sortable: true,
-      render: (value: number) => (
-        <div className="flex items-center gap-2">
-          <DollarSign className="h-3 w-3 text-muted-foreground" />
-          <span className="font-bold">Rs. {value.toLocaleString()}</span>
-        </div>
-      ),
-    },
-    {
-      label: "Paid/Total",
-      key: "paid_amount",
-      sortable: true,
-
-
-    },
-    {
-      label: "Profit",
-      key: "profit",
-      sortable: true,
-      render: (value: number) => {
-        const color = value >= 0 ? "text-green-600" : "text-red-600";
-        return (
-          <span className={`font-medium ${color}`}>
-            Rs. {value.toLocaleString()}
-          </span>
-        );
-      },
-    },
-    {
-      label: "Status",
-      key: "status",
-      sortable: true,
-      
-    },
-    {
-      label: "Created By",
-      key: "created_by",
-      sortable: true,
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <span className="text-sm">{value}</span>
-        </div>
-      ),
-    },
-    {
-      label: "Created At",
-      key: "created_at",
-      sortable: true,
-      render: (value: string) => (
-        <div className="text-xs text-muted-foreground">
-          {format(new Date(value), "dd MMM yyyy, HH:mm")}
-        </div>
-      ),
-    },
-  ];
 
   if (error) {
     return (
@@ -283,180 +190,21 @@ const Sales = () => {
               } found`}
           </p>
         </div>
-      
+
       </div>
 
-      {/* Summary Cards */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Total Sales</p>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-2xl font-bold">{summaryStats.totalSales}</p>
-              <div className="flex items-center gap-2">
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div className="bg-blue-500 h-1 rounded-full" style={{ width: '100%' }} />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-2xl font-bold">
-                Rs. {summaryStats.totalRevenue.toLocaleString()}
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div className="bg-green-500 h-1 rounded-full" style={{ width: '100%' }} />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Total Profit</p>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <p className="text-2xl font-bold">
-                Rs. {summaryStats.totalProfit.toLocaleString()}
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-full bg-gray-200 rounded-full h-1">
-                  <div className="bg-emerald-500 h-1 rounded-full" style={{ width: '100%' }} />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">Active Status</p>
-                <div className="flex items-center gap-1">
-                  <Badge variant="secondary" className="text-xs">
-                    {summaryStats.pendingSales} Pending
-                  </Badge>
-                  <Badge variant="default" className="text-xs">
-                    {summaryStats.completedSales} Completed
-                  </Badge>
-                </div>
-              </div>
-              <p className="text-lg font-semibold">
-                {((summaryStats.completedSales / summaryStats.totalSales) * 100 || 0).toFixed(1)}% Completed
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-1">
-                <div
-                  className="bg-blue-500 h-1 rounded-full"
-                  style={{
-                    width: `${(summaryStats.completedSales / summaryStats.totalSales) * 100 || 0}%`
-                  }}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div> */}
-
-      {/* Filters */}
-      {/* <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search by ID, customer name, or note..."
-                  className="pl-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Date" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Dates</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => refetch()}>
-                    Refresh Data
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    setSearchQuery("");
-                    setStatusFilter("all");
-                    setDateFilter("all");
-                  }}>
-                    Clear Filters
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </CardContent>
-      </Card> */}
 
       {/* Data Table */}
       <DataTable
         selectable={false}
         defaultItemsPerPage={10}
         pagination={true}
-        columns={columns as any}
+        columns={salesColumns as any}
         rows={filteredSales as any}
         loading={loading}
         actions={(row: any) => (
-          <div className="flex gap-2 justify-center">
-            <ReusablePopover actions={options as any} rowData={row} />
-            {/* {row.status !== 'cancelled' && (
-              <ReusablePopover actions={cancelOptions as any} rowData={row} />
-            )} */}
-          </div>
+          <ReusablePopover actions={options as any} rowData={row} />
+
         )}
 
       />
@@ -578,10 +326,7 @@ const Sales = () => {
                     <span className="text-muted-foreground">Sale Date</span>
                     <span>{format(new Date(viewingSale.sale_date), "PPP")}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Branch</span>
-                    <span>{viewingSale?.branch_name}</span>
-                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -599,13 +344,7 @@ const Sales = () => {
               <Button variant="outline" onClick={handleViewClose}>
                 Close
               </Button>
-              <Button onClick={() => {
-                setEditingSale(viewingSale);
-                toggleModal("isViewSaleModalOpen");
-                toggleModal("isAddEditSaleModalOpen");
-              }}>
-                Edit Sale
-              </Button>
+
             </div>
           </div>
         )}

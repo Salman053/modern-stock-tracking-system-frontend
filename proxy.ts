@@ -78,7 +78,7 @@ export default async function proxy(request: Request) {
     // If user tries to access a protected route without specific role prefix
     const hasRolePrefix = pathname.startsWith("/super-admin") || 
                          pathname.startsWith("/branch-admin") || 
-                         pathname.startsWith("/staff");
+                         pathname.startsWith("/sales-manager");
 
     if (!hasRolePrefix && userRole) {
       console.log('Middleware - No role prefix, redirecting to:', `/${userRole}/dashboard`);
