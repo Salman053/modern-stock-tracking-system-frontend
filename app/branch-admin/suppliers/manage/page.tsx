@@ -22,9 +22,13 @@ const Suppliers = () => {
     isDeleteSupplierModalOpen: false,
   });
 
-  const {user} = useAuth()
-  const [selectedSupplier, setSelectedSupplier] = useState<ISupplier | null>(null);
-  const [editingSupplier, setEditingSupplier] = useState<ISupplier | null>(null);
+  const { user } = useAuth();
+  const [selectedSupplier, setSelectedSupplier] = useState<ISupplier | null>(
+    null
+  );
+  const [editingSupplier, setEditingSupplier] = useState<ISupplier | null>(
+    null
+  );
 
   const { data, error, loading, refetch } = useFetch(
     `${server_base_url}/suppliers/?branch_id=${user?.branch_id}&include_archived=true`,
@@ -33,7 +37,6 @@ const Suppliers = () => {
       auto: true,
     }
   );
-  console.log(data)
 
   const { mutate: deleteSupplier, loading: deleteLoading } = useMutation(
     `${server_base_url}/suppliers/${selectedSupplier?.id}`,
@@ -120,7 +123,11 @@ const Suppliers = () => {
     }[status];
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${config?.color || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          config?.color || "bg-gray-100 text-gray-800"
+        }`}
+      >
         {config?.label || status}
       </span>
     );
@@ -128,11 +135,13 @@ const Suppliers = () => {
 
   const getPermanentBadge = (isPermanent: boolean) => {
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-        isPermanent 
-          ? "bg-blue-100 text-blue-800" 
-          : "bg-gray-100 text-gray-800"
-      }`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          isPermanent
+            ? "bg-blue-100 text-blue-800"
+            : "bg-gray-100 text-gray-800"
+        }`}
+      >
         {isPermanent ? "Permanent" : "Temporary"}
       </span>
     );
@@ -166,8 +175,6 @@ const Suppliers = () => {
     },
   ];
 
-
-
   return (
     <div>
       <div className="flex justify-between mb-6">
@@ -187,21 +194,19 @@ const Suppliers = () => {
         </Button>
       </div>
 
-     
-        <DataTable
-          selectable={false}
-          defaultItemsPerPage={10}
-          pagination={true}
-          columns={enhancedColumns}
-          rows={suppliers as any}
-          loading={loading}
-          actions={(row: any) => (
-            <div className="flex gap-2 justify-center">
-              <ReusablePopover actions={options as any} rowData={row} />
-            </div>
-          )}
-        />
-
+      <DataTable
+        selectable={false}
+        defaultItemsPerPage={10}
+        pagination={true}
+        columns={enhancedColumns}
+        rows={suppliers as any}
+        loading={loading}
+        actions={(row: any) => (
+          <div className="flex gap-2 justify-center">
+            <ReusablePopover actions={options as any} rowData={row} />
+          </div>
+        )}
+      />
 
       <Overlay
         contentClassName="min-w-[80vw]"
@@ -210,7 +215,12 @@ const Suppliers = () => {
       >
         <SupplierForm
           mode={editingSupplier ? "edit" : "create"}
-          initialData={editingSupplier as any && {...editingSupplier,is_permanent:editingSupplier?.is_permanent ? true:false}}
+          initialData={
+            (editingSupplier as any) && {
+              ...editingSupplier,
+              is_permanent: editingSupplier?.is_permanent ? true : false,
+            }
+          }
           onSuccess={handleFormSuccess}
         />
       </Overlay>
@@ -261,7 +271,8 @@ const Suppliers = () => {
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>
-                    All associated records will be updated to reflect this deletion
+                    All associated records will be updated to reflect this
+                    deletion
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -273,8 +284,9 @@ const Suppliers = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                 <p className="text-sm text-blue-800 font-medium">Note:</p>
                 <p className="text-sm text-blue-700">
-                  If this supplier has active stock movements or pending transactions, 
-                  consider marking them as inactive instead of deleting.
+                  If this supplier has active stock movements or pending
+                  transactions, consider marking them as inactive instead of
+                  deleting.
                 </p>
               </div>
             </div>

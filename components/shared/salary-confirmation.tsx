@@ -49,7 +49,7 @@ export const SalaryConfirmationModal = ({
     method: "POST",
     onError: (error: any) => {
       const errorData = error?.data || {};
-      console.log(error);
+
       if (errorData.error_code === "DUPLICATE_PAYMENT") {
         toast.error("Payment Already Exists", {
           description:

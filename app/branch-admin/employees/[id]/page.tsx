@@ -1,26 +1,16 @@
-"use client";
+"use client";;
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import DataTable from "@/components/shared/DataTable";
-import Overlay from "@/components/shared/Overlay";
-import ReusablePopover from "@/components/shared/ReusablePopover";
 import { SalaryConfirmationModal } from "@/components/shared/salary-confirmation";
 import { Button } from "@/components/ui/button";
 import { salary_payments_table_column_branch_admin } from "@/constant/branch-admin-contants";
 import { server_base_url } from "@/constant/server-constants";
-import { useAuth } from "@/hooks/use-auth";
 import { useFetch } from "@/hooks/use-fetch";
 import { useModalState } from "@/hooks/use-modal-state";
 import { useMutation } from "@/hooks/use-mutation";
 import { formatCurrency } from "@/lib/currency-utils";
 import { IEmployee, ISalaryPayment } from "@/types";
-import {
-  DollarSign,
-  Calendar,
-  User,
-  CreditCard,
-  ArrowLeft,
-  Trash2,
-} from "lucide-react";
+import { DollarSign, User, CreditCard } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,7 +18,7 @@ import { toast } from "sonner";
 const SalaryPayments = () => {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const { toggleModal, modalState, closeModal } = useModalState({
     isPaySalaryModalOpen: false,
     isDeleteSalaryPaymentModalOpen: false,

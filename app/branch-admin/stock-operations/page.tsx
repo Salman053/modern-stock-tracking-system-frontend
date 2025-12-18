@@ -43,7 +43,6 @@ const StockOperation = () => {
       credentials: "include",
       method: "DELETE",
       onError: (error: any) => {
-        console.log(error, "Delete Failed");
         toast.error("Delete Failed", {
           description:
             error?.message ||
@@ -51,7 +50,6 @@ const StockOperation = () => {
         });
       },
       onSuccess: (s) => {
-        console.log(s, "Stock movement cancelled successfully");
         toast.success("Stock Movement Cancelled Successfully", {
           description: `Stock movement has been cancelled successfully.`,
         });

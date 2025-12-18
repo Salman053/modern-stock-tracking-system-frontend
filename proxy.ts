@@ -6,7 +6,7 @@ export default async function proxy(request: Request) {
   const pathname = url.pathname;
 
   const publicPaths = ["/", "/sign-in", "/_next", "/favicon.ico", "/public", "/api"];
-  
+
   if (publicPaths.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
@@ -18,7 +18,7 @@ export default async function proxy(request: Request) {
   try {
     const res = await fetch(`${server_base_url}/api/v1/users/me`, {
       method: "GET",
-      headers: { 
+      headers: {
         Cookie: cookie,
         "Content-Type": "application/json"
       },
@@ -46,7 +46,7 @@ export default async function proxy(request: Request) {
       console.error('Middleware - JSON parse error:', parseError);
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
-    
+
     // Check response structure
     if (!data || !data.success || !data.data || !data.data.role) {
       console.log('Middleware - Invalid response structure:', {
@@ -76,9 +76,9 @@ export default async function proxy(request: Request) {
     }
 
     // If user tries to access a protected route without specific role prefix
-    const hasRolePrefix = pathname.startsWith("/super-admin") || 
-                         pathname.startsWith("/branch-admin") || 
-                         pathname.startsWith("/sales-manager");
+    const hasRolePrefix = pathname.startsWith("/super-admin") ||
+      pathname.startsWith("/branch-admin") ||
+      pathname.startsWith("/sales-manager");
 
     if (!hasRolePrefix && userRole) {
       console.log('Middleware - No role prefix, redirecting to:', `/${userRole}/dashboard`);

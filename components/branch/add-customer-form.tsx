@@ -96,7 +96,6 @@ export function CustomerForm({
       credentials: "include",
       method: isEdit ? "PATCH" : "POST",
       onError: (error) => {
-        console.log(error);
         toast.error(isEdit ? "Update Failed" : "Creation Failed", {
           description:
             error?.message ||
@@ -136,7 +135,6 @@ export function CustomerForm({
     },
   });
 
-  console.log(form.formState.errors);
   const onSubmit = (data: CustomerSchemaType) => {
     setFormData(data);
     setShowConfirmation(true);

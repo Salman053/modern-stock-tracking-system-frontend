@@ -91,7 +91,7 @@ const DuePaymentHistory = () => {
     auto: true,
   });
 
-  // console.log(supplier_due);
+  //
   const { mutate: deletePayment, loading: deleteLoading } = useMutation(
     `${server_base_url}/due-payments/${selectedPayment?.id}`,
     {

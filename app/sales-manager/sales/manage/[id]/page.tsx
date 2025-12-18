@@ -32,12 +32,12 @@ import { useFetch } from "@/hooks/use-fetch";
 import { Sale, SaleItem, CustomerDue } from "@/types";
 import { server_base_url } from "@/constant/server-constants";
 import SaleSummary from "@/components/sales/sales-summary";
-import PaymentStatusBadge from "@/components/shared/payment-status-badge";
 import SalesItemsTable from "@/components/sales/sales-items-table";
 import { useModalState } from "@/hooks/use-modal-state";
 import Overlay from "@/components/shared/Overlay";
 import { PaymentForm } from "@/components/shared/payment-form";
 import DuePaymentsTable from "@/components/sales/due-payments";
+import { formatCurrency } from "@/lib/currency-utils";
 
 export default function SaleDetailsPage() {
   const params = useParams();
@@ -62,10 +62,12 @@ export default function SaleDetailsPage() {
     auto: true,
   });
 
+  console.log(saleId);
   const {
     data: saleResponse,
     error: saleError,
     loading: saleLoading,
+
     refetch: refetchSale,
   } = useFetch<{
     success: boolean;
@@ -75,6 +77,7 @@ export default function SaleDetailsPage() {
   }>(`${server_base_url}/sales/${saleId}`, {
     credentials: "include",
     auto: true,
+    cache: true,
   });
 
   const {
@@ -109,20 +112,12 @@ export default function SaleDetailsPage() {
   };
 
   const loading = saleLoading || itemsLoading || dueLoading;
-  const error = saleError || itemsError || dueError;
+  const error = saleError || itemsError;
   const saleData: any = saleResponse?.data;
   const saleItems = itemsResponse?.data || [];
   const customerDue: any = dueResponse?.data;
 
-  // Format currency helper
-  const formatCurrency = (amount: string | number) => {
-    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat("en-PK", {
-      style: "currency",
-      currency: "PKR",
-      minimumFractionDigits: 2,
-    }).format(numAmount);
-  };
+  
 
   if (loading) {
     return (
@@ -180,12 +175,12 @@ export default function SaleDetailsPage() {
     parseFloat(customerDue.remaining_amount) > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className=" bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8"
+        className=" mx-auto px-4 py-8"
       >
         {/* Enhanced Header */}
         <div className="mb-8">
@@ -308,11 +303,10 @@ export default function SaleDetailsPage() {
                         Remaining
                       </p>
                       <p
-                        className={`text-3xl font-bold ${
-                          parseFloat(customerDue.remaining_amount) > 0
+                        className={`text-3xl font-bold ${parseFloat(customerDue.remaining_amount) > 0
                             ? "text-destructive"
                             : "text-green-600"
-                        }`}
+                          }`}
                       >
                         {formatCurrency(customerDue.remaining_amount)}
                       </p>
@@ -351,8 +345,8 @@ export default function SaleDetailsPage() {
                             customerDue.status === "paid"
                               ? "default"
                               : customerDue.status === "partial"
-                              ? "secondary"
-                              : "destructive"
+                                ? "secondary"
+                                : "destructive"
                           }
                           className="mt-1"
                         >
@@ -457,7 +451,7 @@ export default function SaleDetailsPage() {
 
             {/* Sale Status */}
             <Card className="shadow-lg border-2">
-              <CardHeader className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
+              <CardHeader className="bg-gradient-to-br py-3 from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20">
                 <CardTitle className="flex items-center gap-2">
                   <Store className="h-5 w-5 text-orange-600" />
                   Transaction Info
@@ -471,22 +465,13 @@ export default function SaleDetailsPage() {
                       saleData?.status === "active"
                         ? "default"
                         : saleData?.status === "completed"
-                        ? "secondary"
-                        : "destructive"
+                          ? "secondary"
+                          : "destructive"
                     }
                     className="text-xs"
                   >
                     {saleData?.status?.toUpperCase()}
                   </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50">
-                  <span className="text-sm font-medium">Payment</span>
-                  <PaymentStatusBadge
-                    isFullyPaid={saleData?.is_fully_paid}
-                    paidAmount={saleData?.paid_amount}
-                    totalAmount={saleData?.total_amount}
-                  />
                 </div>
 
                 <Separator />

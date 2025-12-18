@@ -94,11 +94,10 @@ export function PaymentForm({
     null
   );
 
-  console.log(dueData);
   const { user } = useAuth();
   const isEdit = mode === "edit";
 
-  const { data,error, loading, mutate } = useMutation(
+  const { data, error, loading, mutate } = useMutation(
     isEdit
       ? `${server_base_url}/due-payments/${initialData?.id}`
       : `${server_base_url}/due-payments`,
@@ -106,7 +105,6 @@ export function PaymentForm({
       credentials: "include",
       method: isEdit ? "PATCH" : "POST",
       onError: (error) => {
-        console.log(error);
         toast.error(isEdit ? "Update Failed" : "Creation Failed", {
           description:
             error?.message ||
@@ -116,7 +114,6 @@ export function PaymentForm({
         });
       },
       onSuccess: (data) => {
-        console.log(data);
         toast.success(
           isEdit
             ? "Payment Updated Successfully"
@@ -134,7 +131,7 @@ export function PaymentForm({
     }
   );
 
-  // console.log(data)
+  //
 
   const remainingAmount = dueData
     ? Number(dueData.remaining_amount) ||

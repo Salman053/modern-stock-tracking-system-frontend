@@ -1,20 +1,27 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from "react";
-
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Button } from "../ui/button";
-import { Checkbox } from "../ui/checkbox";
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import TableSkeleton from "./table-skeleton";
 import NoDataMessage from "./no-data-message";
 
@@ -23,26 +30,27 @@ export interface TableColumn {
   key: string;
   sortable?: boolean;
   sortKey?: string;
-  render?: (value: any) => any;
+  render?: (value: any) => React.ReactNode;
 }
 
-interface TableRow {
+interface TableRowData {
   [key: string]: any;
 }
 
 interface DataTableProps {
   loading?: boolean;
   columns: TableColumn[];
-  rows: TableRow[];
-  actions?: (row: TableRow) => any;
-  onRowSelect?: (selectedRows: TableRow[]) => void;
+  rows: TableRowData[];
+  actions?: (row: TableRowData) => React.ReactNode;
+  onRowSelect?: (selectedRows: TableRowData[]) => void;
   itemsPerPageOptions?: number[];
   defaultItemsPerPage?: number;
   selectable?: boolean;
   pagination?: boolean;
   shouldUnselectAll?: boolean;
 }
-// Table Row render example for status column
+
+// Example render function for status column (you can keep this or remove)
 const renderStatus = (status: string) => {
   const color =
     status === "active"
@@ -55,8 +63,8 @@ const renderStatus = (status: string) => {
   );
 };
 
-// Updated TableHeader and TableRow with professional styling
-const TableHeader = memo(
+// Updated TableHeaderRow component with shadcn TableHead
+const TableHeaderRow = memo(
   ({
     columns,
     selectable,
@@ -67,66 +75,63 @@ const TableHeader = memo(
     sortConfig,
     handleSort,
   }: any) => (
-    <thead className="dark:bg-slate-800 bg-primary text-white rounded-full   rounded-3xl sticky top-0 z-10 dark:text-foreground uppercase text-xs tracking-wider">
-      <tr>
-        {selectable && (
-          <th className="px-4 py-3  rounded-3xl ">
-            <Checkbox
-              className="rounded-sm outline-none"
-              onCheckedChange={toggleSelectAll}
-              checked={
-                selectedRows.size === paginatedRows.length &&
-                paginatedRows.length > 0
-              }
-            />
-          </th>
-        )}
-        {columns.map((column: TableColumn) => (
-          <th
-            key={column.key}
-            className={`px-4 py-3  text-left font-medium ${
-              column.sortable ? "cursor-pointer select-none" : ""
-            }`}
-            onClick={() => column.sortable && handleSort(column.key)}
-          >
-            <div className="flex items-center gap-1">
-              {column.label}
-              {column.sortable && (
-                <div className="flex flex-col">
-                  <span
-                    className={`text-[7px] ${
-                      sortConfig?.key === column.key &&
-                      sortConfig.direction === "asc"
-                        ? "text-black font-bold"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    ▲
-                  </span>
-                  <span
-                    className={`text-[7px] ${
-                      sortConfig?.key === column.key &&
-                      sortConfig.direction === "desc"
-                        ? "text-black font-bold"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    ▼
-                  </span>
-                </div>
-              )}
-            </div>
-          </th>
-        ))}
-        {actions && (
-          <th className="px-4 py-3 text-left font-medium">Actions</th>
-        )}
-      </tr>
-    </thead>
+    <>
+      {selectable && (
+        <TableHead className="w-[50px]">
+          <Checkbox
+            className="rounded-sm outline-none"
+            onCheckedChange={toggleSelectAll}
+            checked={
+              selectedRows.size === paginatedRows.length &&
+              paginatedRows.length > 0
+            }
+          />
+        </TableHead>
+      )}
+      {columns.map((column: TableColumn) => (
+        <TableHead
+          key={column.key}
+          className={` py-3   text-white ${
+            column.sortable ? "cursor-pointer select-none" : ""
+          }`}
+          onClick={() => column.sortable && handleSort(column.key)}
+        >
+          <div className="flex items-center gap-1">
+            {column.label}
+            {column.sortable && (
+              <div className="flex flex-col">
+                <span
+                  className={`text-[7px] ${
+                    sortConfig?.key === column.key &&
+                    sortConfig.direction === "asc"
+                      ? "text-primary font-bold"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  ▲
+                </span>
+                <span
+                  className={`text-[7px] ${
+                    sortConfig?.key === column.key &&
+                    sortConfig.direction === "desc"
+                      ? "text-primary font-bold"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  ▼
+                </span>
+              </div>
+            )}
+          </div>
+        </TableHead>
+      ))}
+      {actions && <TableHead className="text-white">Actions</TableHead>}
+    </>
   )
 );
 
-const TableRow = memo(
+// Updated TableRow component with shadcn TableRow and TableCell
+const DataTableRow = memo(
   ({
     row,
     rowIndex,
@@ -136,33 +141,29 @@ const TableRow = memo(
     selectedRows,
     toggleRowSelection,
   }: any) => (
-    <tr
-      className={`transition-colors text-foreground duration-200 hover:dark:bg-slate-600 ${
-        rowIndex % 2 === 0 ? "bg-background/20" : "dark:bg-slate-800"
-      }`}
+    <TableRow
+      className={selectedRows.has(rowIndex) ? "bg-muted/50" : undefined}
     >
       {selectable && (
-        <td className="px-4 py-3 border-b">
+        <TableCell>
           <Checkbox
             className="rounded-sm outline-none"
             onCheckedChange={() => toggleRowSelection(rowIndex)}
             checked={selectedRows.has(rowIndex)}
           />
-        </td>
+        </TableCell>
       )}
       {columns.map((column: TableColumn) => (
-        <td
-          key={column.key}
-          className="px-4 py-3 border-b text-sm first-letter:capitalize"
-        >
+        <TableCell key={column.key} className="first-letter:capitalize">
           {column.render ? column.render(row[column.key]) : row[column.key]}
-        </td>
+        </TableCell>
       ))}
-      {actions && <td className="px-4 py-3 border-b">{actions(row)}</td>}
-    </tr>
+      {actions && <TableCell className="">{actions(row)}</TableCell>}
+    </TableRow>
   )
 );
 
+// Pagination component remains similar but uses shadcn styling
 const Pagination = memo(
   ({
     itemsPerPage,
@@ -177,9 +178,9 @@ const Pagination = memo(
     goToNextPage,
     goToLastPage,
   }: any) => (
-    <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">Rows per page:</span>
+        <span className="text-sm text-muted-foreground">Rows per page:</span>
         <Select
           value={itemsPerPage.toString()}
           onValueChange={(value) => {
@@ -203,52 +204,74 @@ const Pagination = memo(
         <Button
           size="icon"
           variant="outline"
-          className="rounded border-gray-200"
+          className="h-8 w-8"
           onClick={goToFirstPage}
           disabled={currentPage === 1}
         >
-          <ChevronsLeft className="w-4 h-4" />
+          <ChevronsLeft className="h-4 w-4" />
         </Button>
         <Button
           size="icon"
           variant="outline"
-          className="rounded border-gray-200"
+          className="h-8 w-8"
           onClick={goToPreviousPage}
           disabled={currentPage === 1}
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <Button
-            key={page}
-            size="icon"
-            variant={currentPage === page ? "default" : "outline"}
-            className={`rounded border-gray-200 ${
-              currentPage === page ? "bg-primary text-primary-foreground" : ""
-            }`}
-            onClick={() => goToPage(page)}
-          >
-            {page}
-          </Button>
-        ))}
+        <div className="flex items-center gap-1">
+          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            if (pageNum > totalPages || pageNum < 1) return null;
+
+            return (
+              <Button
+                key={pageNum}
+                size="icon"
+                variant={currentPage === pageNum ? "default" : "outline"}
+                className={`h-8 w-8 ${
+                  currentPage === pageNum
+                    ? "bg-primary text-primary-foreground"
+                    : ""
+                }`}
+                onClick={() => goToPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+        </div>
         <Button
           size="icon"
           variant="outline"
-          className="rounded border-gray-200"
+          className="h-8 w-8"
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
         <Button
           size="icon"
           variant="outline"
-          className="rounded border-gray-200"
+          className="h-8 w-8"
           onClick={goToLastPage}
           disabled={currentPage === totalPages}
         >
-          <ChevronsRight className="w-4 h-4" />
+          <ChevronsRight className="h-4 w-4" />
         </Button>
+      </div>
+      <div className="text-sm text-muted-foreground">
+        Page {currentPage} of {totalPages}
       </div>
     </div>
   )
@@ -385,25 +408,29 @@ const DataTable: React.FC<DataTableProps> = memo(
     }, [loading]);
 
     return (
-      <div className="space-y-4 overflow-x-auto">
-        <div className="overflow-x-auto">
-          <table className="w-full text-[14px] text-left border-collapse table-auto">
-            <TableHeader
-              columns={columns}
-              selectable={selectable}
-              actions={actions}
-              selectedRows={selectedRows}
-              paginatedRows={paginatedRows}
-              toggleSelectAll={toggleSelectAll}
-              sortConfig={sortConfig}
-              handleSort={handleSort}
-            />
-            {showLoading ? (
-              <TableSkeleton columns={columns} rowsCount={5} />
-            ) : paginatedRows?.length > 0 ? (
-              <tbody>
-                {paginatedRows.map((row, rowIndex) => (
-                  <TableRow
+      <div className="space-y-4">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader className=" bg-primary text-foreground">
+              <TableRow className="">
+                <TableHeaderRow
+                  columns={columns}
+                  selectable={selectable}
+                  actions={actions}
+                  selectedRows={selectedRows}
+                  paginatedRows={paginatedRows}
+                  toggleSelectAll={toggleSelectAll}
+                  sortConfig={sortConfig}
+                  handleSort={handleSort}
+                />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {showLoading ? (
+                <TableSkeleton columns={columns} rowsCount={5} />
+              ) : paginatedRows?.length > 0 ? (
+                paginatedRows.map((row, rowIndex) => (
+                  <DataTableRow
                     key={rowIndex}
                     row={row}
                     rowIndex={rowIndex}
@@ -413,20 +440,23 @@ const DataTable: React.FC<DataTableProps> = memo(
                     selectedRows={selectedRows}
                     toggleRowSelection={toggleRowSelection}
                   />
-                ))}
-              </tbody>
-            ) : (
-              <tbody>
-                <tr>
-                  <td colSpan={columns.length + (selectable ? 2 : 1)}>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={
+                      columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)
+                    }
+                    className="h-24 text-center"
+                  >
                     <NoDataMessage />
-                  </td>
-                </tr>
-              </tbody>
-            )}
-          </table>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-        {(pagination || rows.length > 0) && (
+        {pagination && rows.length > 0 && (
           <Pagination
             itemsPerPage={itemsPerPage}
             setItemsPerPage={setItemsPerPage}

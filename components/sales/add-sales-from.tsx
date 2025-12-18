@@ -27,6 +27,7 @@ import {
   CreditCard,
   ShieldCheck,
   AlertCircle,
+  Printer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ReceiptPrintModal } from "@/components/shared/receipt-print-modal";
 
 interface SalesFormProps {
   sale?: Sale;
@@ -124,7 +126,8 @@ export function SalesForm({ sale, onSuccess, onCancel }: SalesFormProps) {
   const [selectedProducts, setSelectedProducts] = useState<IProduct[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [stockAlert, setStockAlert] = useState<Record<number, boolean>>({});
-
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [createdSaleData, setCreatedSaleData] = useState<any>(null);
   // Fetch products
   const {
     data: productsData,
@@ -164,6 +167,18 @@ export function SalesForm({ sale, onSuccess, onCancel }: SalesFormProps) {
             }`,
           }
         );
+
+        // Save the created sale data for receipt printing
+        if (!sale) {
+          const sale = getValues();
+          setCreatedSaleData({
+            ...sale,
+            ...data.data,
+            items: getValues("sale_items"),
+          });
+          setShowReceiptModal(true);
+        }
+
         if (onSuccess) onSuccess();
       },
       onError: (error) => {
@@ -384,7 +399,7 @@ export function SalesForm({ sale, onSuccess, onCancel }: SalesFormProps) {
         return sum;
       }, 0) - (data.discount || 0);
 
-    const formData = {
+    const saleData = {
       sale_data: {
         customer_id: data.customer_id,
         sale_date: data.sale_date,
@@ -406,8 +421,14 @@ export function SalesForm({ sale, onSuccess, onCancel }: SalesFormProps) {
       })),
     };
 
-    // console.log(formData);
-    mutate(formData).then(() => reset());
+    // Store the sale data for receipt printing
+    setCreatedSaleData({
+      ...saleData.sale_data,
+      items: saleData.items,
+      id: sale?.id || `TEMP_${Date.now()}`,
+    });
+
+    mutate(saleData);
   };
 
   // Selected customer
@@ -1787,6 +1808,18 @@ export function SalesForm({ sale, onSuccess, onCancel }: SalesFormProps) {
           variant="default"
           requiresConfirmation={true}
         />
+        {createdSaleData && (
+          <ReceiptPrintModal
+            open={showReceiptModal}
+            onOpenChange={()=>{
+              setShowReceiptModal(false);
+              reset();
+              setCurrentStep(0)
+            }}
+
+            saleData={createdSaleData}
+          />
+        )}
       </FormProvider>
     </TooltipProvider>
   );

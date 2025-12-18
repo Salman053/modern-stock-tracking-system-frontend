@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -62,7 +62,6 @@ const ROLE_CONFIG = {
     description: "Manage sales and operations within assigned branch",
     color: "bg-blue-100 text-blue-800",
   },
-  
 };
 
 const STATUS_CONFIG = {
@@ -82,7 +81,6 @@ const STATUS_CONFIG = {
     color: "bg-red-100 text-red-800 border-red-200",
   },
 };
-
 
 const createUserSchema = userRegistrationSchema;
 const editUserSchema = userRegistrationSchema.omit({
@@ -132,13 +130,14 @@ export function AssignUserForm({
     }
   );
 
-  
   const formSchema = isEdit ? editUserSchema : createUserSchema;
 
   const form = useForm<UserRegistrationFormData>({
-    resolver: zodResolver(formSchema.omit({
-      branch_id:true
-    }) as any),
+    resolver: zodResolver(
+      formSchema.omit({
+        branch_id: true,
+      }) as any
+    ),
     defaultValues: {
       username: initialData?.username || "",
       email: initialData?.email || "",
@@ -151,15 +150,11 @@ export function AssignUserForm({
   });
 
   const onSubmit = (data: UserRegistrationFormData) => {
-   
     setFormData(data);
     setShowConfirmation(true);
-    
   };
 
   const handleConfirm = async (password: string) => {
-    console.log("Handle confirm called with password:", !!password);
-
     if (!formData || !password) {
       toast.warning("Please provide admin password");
       return;
@@ -170,22 +165,19 @@ export function AssignUserForm({
         username: formData.username,
         email: formData.email,
         role: formData.role,
-        branch_id: user?.branch_id, 
+        branch_id: user?.branch_id,
         status: formData.status,
         admin_password: password,
       };
 
-      
       if (!isEdit) {
         payload.password = formData.password;
       }
 
-      
       if (isEdit && initialData?.id) {
         payload.user_id = initialData.id;
       }
 
-      console.log("Sending payload:", payload);
       await mutate(payload);
     } catch (error: any) {
       toast.error(isEdit ? "Update Failed" : "Creation Failed", {
@@ -220,11 +212,7 @@ export function AssignUserForm({
     return STATUS_CONFIG[status]?.description || "";
   };
 
-  
-  React.useEffect(() => {
-    console.log("Form validity changed:", form.formState.isValid);
-    console.log("Form errors:", form.formState.errors);
-  }, [form.formState.isValid, form.formState.errors]);
+  React.useEffect(() => {}, [form.formState.isValid, form.formState.errors]);
 
   return (
     <>
@@ -428,7 +416,6 @@ export function AssignUserForm({
                         className="bg-muted"
                       />
                     </FormControl>
-                   
                   </FormItem>
 
                   {/* Hidden branch_id field for form validation */}

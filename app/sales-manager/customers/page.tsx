@@ -15,8 +15,10 @@ import { ICustomer } from "@/types";
 import { FilePenLine, Trash2, UserPlus, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const Customers = () => {
+  const router = useRouter();
   const { user } = useAuth();
   const { toggleModal, modalState } = useModalState({
     isAddEditCustomerModalOpen: false,
@@ -85,6 +87,14 @@ const Customers = () => {
   const customers: ICustomer[] = data?.data || [];
 
   const options = [
+    {
+      label: "View",
+      icon: <FilePenLine size={12} />,
+      onClick: (item: ICustomer) => {
+        router.push(`/sales-manager/customers/${item.id}`);
+      },
+    },
+
     {
       label: "Edit",
       icon: <FilePenLine size={12} />,

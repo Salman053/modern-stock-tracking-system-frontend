@@ -30,6 +30,7 @@ import { PaymentForm } from "../shared/payment-form";
 import Overlay from "../shared/Overlay";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "../shared/confirmation-dialog";
+import { formatCurrency } from "@/lib/currency-utils";
 
 export interface DuePayment {
   id: number;
@@ -78,7 +79,7 @@ export default function DuePaymentsTable({
   const [selectedRecord, setSelectedRecord] = useState<DuePayment | null>(null);
 
   // Delete mutation
-  const { mutate: deletePayment } = useMutation(
+  const { data: Test, mutate: deletePayment } = useMutation(
     selectedRecord?.id
       ? `${server_base_url}/due-payments/${selectedRecord.id}`
       : "",
@@ -97,6 +98,7 @@ export default function DuePaymentsTable({
       },
     }
   );
+  //
 
   const { closeModal, openModal, modalState } = useModalState({
     isDeleteModalOpen: false,
@@ -110,14 +112,7 @@ export default function DuePaymentsTable({
   }, 0);
 
   // Format currency
-  const formatCurrency = (amount: string | number) => {
-    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat("en-PK", {
-      style: "currency",
-      currency: "PKR",
-      minimumFractionDigits: 2,
-    }).format(numAmount);
-  };
+
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -157,12 +152,7 @@ export default function DuePaymentsTable({
     }
   };
 
-  // Refresh data when modal closes
-  useEffect(() => {
-    if (!modalState.isEditModelOpen && !modalState.isDeleteModalOpen) {
-      refetch();
-    }
-  }, [modalState.isEditModelOpen, modalState.isDeleteModalOpen, refetch]);
+
 
   if (loading) {
     return (
@@ -250,7 +240,7 @@ export default function DuePaymentsTable({
                   <TableHead>Amount</TableHead>
                   <TableHead>Method</TableHead>
                   <TableHead>Branch</TableHead>
-                  <TableHead>Created By</TableHead>
+                  <TableHead>Created At</TableHead>
                   <TableHead>Description</TableHead>
                   {Number(dueData.remaining_amount) >
                     Number(dueData.total_amount) && (
@@ -424,7 +414,7 @@ export default function DuePaymentsTable({
                 <div className="flex justify-between">
                   <span>Amount:</span>
                   <span className="font-medium text-destructive">
-                    {formatCurrency(selectedRecord.amount)}
+                    {formatCurrency(Number(selectedRecord.amount))}
                   </span>
                 </div>
                 <div className="flex justify-between">

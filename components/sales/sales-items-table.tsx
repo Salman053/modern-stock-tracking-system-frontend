@@ -1,4 +1,4 @@
-import { SaleItem } from '@/types';
+import { SaleItem } from "@/types";
 import {
   Table,
   TableBody,
@@ -6,15 +6,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/currency-utils";
 
 interface SalesItemsTableProps {
   items: SaleItem[];
 }
 
 export default function SalesItemsTable({ items }: SalesItemsTableProps) {
-  const totalItems = items.reduce((sum, item) => sum + Number(item.quantity), 0);
+  const totalItems = items.reduce(
+    (sum, item) => sum + Number(item.quantity),
+    0
+  );
   const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
 
   return (
@@ -52,7 +56,9 @@ export default function SalesItemsTable({ items }: SalesItemsTableProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge
-                    variant={item.available_stock > 100 ? "outline" : "destructive"}
+                    variant={
+                      item.available_stock > 100 ? "outline" : "destructive"
+                    }
                   >
                     {item.available_stock.toLocaleString()}
                   </Badge>
@@ -67,9 +73,7 @@ export default function SalesItemsTable({ items }: SalesItemsTableProps) {
         <div className="text-muted-foreground">
           Total Items: <span className="font-semibold">{totalItems}</span>
         </div>
-        <div className="font-bold">
-          Subtotal: ${totalAmount.toLocaleString()}
-        </div>
+        <div className="font-bold">Subtotal: {formatCurrency(totalAmount)}</div>
       </div>
     </div>
   );

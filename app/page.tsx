@@ -43,10 +43,9 @@ import { useAuth } from "@/hooks/use-auth";
 export default function Home() {
   const [currentFeature, setCurrentFeature] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-const {user} = useAuth()
-console.log(user)
+  const { user } = useAuth();
+
   useEffect(() => {
-   
     setIsVisible(true);
     const interval = setInterval(() => {
       setCurrentFeature((prev) => (prev + 1) % features.length);

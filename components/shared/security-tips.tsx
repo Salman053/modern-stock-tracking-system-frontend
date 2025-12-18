@@ -21,7 +21,7 @@ const SecurityTips = ({
   const [modal, setModal] = useState<boolean>(false);
   return (
     <>
-      <Card className=" max-w-2xl mx-auto">
+      <Card className="  mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <ShieldAlert className="h-5 w-5 text-amber-600" />

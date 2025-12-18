@@ -96,7 +96,6 @@ export function SupplierForm({
       credentials: "include",
       method: isEdit ? "PATCH" : "POST",
       onError: (error) => {
-        console.log(error);
         toast.error(isEdit ? "Update Failed" : "Creation Failed", {
           description:
             error?.message ||

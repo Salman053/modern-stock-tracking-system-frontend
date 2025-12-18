@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import Header from "@/components/shared/header";
 import ProfessionalSidebar from "@/components/shared/professional-sidebar";
@@ -47,7 +47,7 @@ export default function SalesManagerLayout({
         />
 
         {/* Scrollable Content */}
-        <main className="flex-1 px-5  overflow-hidden overflow-y-auto w-full bg-gray-50 dark:bg-gray-950">
+        <main className="flex-1 px-5  pb-10 overflow-hidden overflow-y-auto w-full bg-gray-50 dark:bg-gray-950">
           <Breadcrumb />
           {children}
         </main>

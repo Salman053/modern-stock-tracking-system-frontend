@@ -73,7 +73,7 @@ const DuePaymentHistory = () => {
       auto: true,
     }
   );
-  // console.log(data);
+  //
   const {
     data: branch_dues,
     error: supplier_due_error,
@@ -84,7 +84,7 @@ const DuePaymentHistory = () => {
     auto: true,
   });
 
-  // console.log(branch_dues);
+  //
 
   const { mutate: deletePayment, loading: deleteLoading } = useMutation(
     `${server_base_url}/due-payments/${selectedPayment?.id}`,
