@@ -91,7 +91,7 @@ const TableHeaderRow = memo(
       {columns.map((column: TableColumn) => (
         <TableHead
           key={column.key}
-          className={` py-3   text-white ${
+          className={` py-3    text-white ${
             column.sortable ? "cursor-pointer select-none" : ""
           }`}
           onClick={() => column.sortable && handleSort(column.key)}
@@ -411,7 +411,7 @@ const DataTable: React.FC<DataTableProps> = memo(
       <div className="space-y-4">
         <div className="rounded-md border">
           <Table>
-            <TableHeader className=" bg-primary text-foreground">
+            <TableHeader className=" bg-primary  text-foreground">
               <TableRow className="">
                 <TableHeaderRow
                   columns={columns}

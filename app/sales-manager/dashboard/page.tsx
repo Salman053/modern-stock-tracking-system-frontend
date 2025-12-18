@@ -1,11 +1,19 @@
-"use client";
-import { useAuth } from "@/hooks/use-auth";
-import React from "react";
+"use client"
+import { SaleDashboardAnalytics } from "@/components/sales/sale-dashboard-analytics";
+import { useSaleDashboard } from "@/hooks/use-sales-dashboard";
+import { useState } from "react";
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  //
-  return <div>Dashboard</div>;
+  const { analytics, loading } = useSaleDashboard();
+
+  return (
+    <div className="">
+      {/* <h1 className="text-2xl font-bold">Sales Dashboard</h1> */}
+      <SaleDashboardAnalytics analytics={analytics}
+        loading={loading}
+      />
+    </div>
+  );
 };
 
 export default Dashboard;

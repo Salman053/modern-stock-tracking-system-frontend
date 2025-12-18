@@ -35,7 +35,7 @@ export function ReceiptPrintModal({
     // Call your print function with the specified type
     if (typeof window !== "undefined") {
       // Dynamically import the print function
-      import("../sales/create-sale-print").then((module) => {
+      import("../../business-logic/create-sale-print").then((module) => {
         module.printSaleReceipt(saleData, type);
       });
     }

@@ -1,10 +1,9 @@
-"use client";
-
+"use client";;
 import DataTable, { TableColumn } from "@/components/shared/DataTable";
 import ReusablePopover from "@/components/shared/ReusablePopover";
 import { server_base_url } from "@/constant/server-constants";
 import { useFetch } from "@/hooks/use-fetch";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,13 +17,6 @@ import {
   Receipt,
   Wallet,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { PaymentForm } from "@/components/shared/payment-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CustomerDue } from "@/types";
@@ -226,7 +218,7 @@ const CustomerDues = () => {
         | "paid"
         | "overdue"
         | "cancelled",
-      due_type: due.due_type,
+      due_type: "customer",
       description: due.description,
       created_at: due.created_at,
       updated_at: due.updated_at,
@@ -247,15 +239,15 @@ const CustomerDues = () => {
     );
   }
 
+  // console.log(dueError)
   if (dueError) {
     return (
       <div className="container mx-auto p-6">
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 text-red-800">
-              <AlertCircle className="h-6 w-6" />
+            <div className="flex items-center gap-3 text-yellow-800">
+              <AlertCircle  className="h-6 w-6" />
               <div>
-                <h3 className="font-semibold">Error Loading Dues</h3>
                 <p className="text-sm">
                   {dueError.message || "Failed to load customer dues"}
                 </p>
@@ -413,6 +405,7 @@ const CustomerDues = () => {
 
           <PaymentForm
             mode="create"
+            // initialData={}
             dueData={transformDueForPayment(selectedDue)}
             onSuccess={handlePaymentSuccess}
           />

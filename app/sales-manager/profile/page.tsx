@@ -6,9 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import SecurityTips from "@/components/shared/security-tips";
 
 export default function ProfilePage() {
-  const router = useRouter();
 
-  const { loading, refetch, user } = useAuth();
+  const { loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -22,9 +21,9 @@ export default function ProfilePage() {
   }
 
   return (
-      <div className=" flex-wrap mx-auto  items-start flex gap-5">
-        {user && <UserProfileForm userData={user} />}
-        <SecurityTips userId={user?.id as any} username={user?.username} />
-      </div>
+    <div className=" flex-wrap mx-auto  items-start flex gap-5">
+      {user && <UserProfileForm userData={user} />}
+      <SecurityTips userId={user?.id as any} username={user?.username} />
+    </div>
   );
 }
